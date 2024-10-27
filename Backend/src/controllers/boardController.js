@@ -1,18 +1,31 @@
 const Board = require('../models/boardModel');
 const Column = require('../models/columnModel');
 const Task = require('../models/taskModel');
+
 // Create a new board
 exports.createBoard = async (req, res) => {
   try {
     const board = new Board(req.body);
-    const toDoCreate = new Column({name: 'To Do', boardId: board._id});
-    const inProgressCreate = new Column({name: 'In Progress', boardId: board._id});
-    const doneCreate = new Column({name: 'Done', boardId: board._id});
-    board.columns.push(toDoCreate, doneCreate, inProgressCreate);
-    board.contents.push({columnName: toDoCreate.name, items: []});
-    board.contents.push({columnName: inProgressCreate.name, items: []});
-    board.contents.push({columnName: doneCreate.name, items: []});
     await board.save();
+
+    const toDoCreate = new Column({ name: 'To Do', boardId: board._id });
+    const inProgressCreate = new Column({ name: 'In Progress', boardId: board._id });
+    const doneCreate = new Column({ name: 'Done', boardId: board._id });
+
+    await toDoCreate.save();
+    await inProgressCreate.save();
+    await doneCreate.save();
+
+    board.columns.push(toDoCreate._id);
+    board.columns.push(inProgressCreate._id);
+    board.columns.push(doneCreate._id);
+
+    board.contents.push({ columnName: toDoCreate.name, items: [] });
+    board.contents.push({ columnName: inProgressCreate.name, items: [] });
+    board.contents.push({ columnName: doneCreate.name, items: [] });
+
+    await board.save();
+
     res.status(201).json(board);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -67,16 +80,17 @@ exports.deleteBoard = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
 exports.addColumn = async (req, res) => {
   try {
-    const boardId = req.params.id;
-    const newColumn = new Column();
+    const { boardId, columnName } = req.body;
+    const column = new Column({ name: columnName });
+    await column.save();
 
     const board = await Board.findById(boardId);
-    board.contents.push({ columnName:newColumn.name, items: [] }); // Assuming contents is an array of objects with columnId and items
+    board.columns.push({ columnId: column._id, columnName: column.name, tasks: [] });
+    await board.save();
 
-    res.status(200).json({ message: 'Column added successfully', board });
+    res.status(201).json(column);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -84,14 +98,17 @@ exports.addColumn = async (req, res) => {
 
 exports.addTask = async (req, res) => {
   try {
-    const boardId = req.params.id;
-    const pos = req.params.pos;
-    const newTaskName = req.body;
-    const board = await Board.findById(boardId);
-    const newTask = new Task({ name: newTaskName, boardId: boardId, columnId: board.contents[pos].columnId});
+    const { columnId, taskName } = req.body;
+    const task = new Task({ title: taskName });
+    await task.save();
 
-    board.contents[pos].items.push(newTaskName);
-  } catch (e) {
-    res.status(400).json({ error: e.message });
+    const board = await Board.findOne({ 'columns.columnId': columnId });
+    const column = board.columns.find(col => col.columnId.toString() === columnId);
+    column.tasks.push({ taskId: task._id, taskName: task.title });
+    await board.save();
+
+    res.status(201).json(task);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
-}
+};

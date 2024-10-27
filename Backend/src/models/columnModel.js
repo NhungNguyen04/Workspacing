@@ -3,8 +3,8 @@ const Schema = mongoose.Schema;
 
 const columnSchema = new Schema({
   name: { type: String, required: true, default: 'Untitled' },
-  boardId: { type: Number },
-  tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
+  boardId: { type: Schema.Types.ObjectId, ref: 'Board'},
+  tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
   display:  {type: Boolean, default: true},

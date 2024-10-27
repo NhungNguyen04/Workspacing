@@ -8,18 +8,19 @@ export interface Task {
   export interface Column {
     _id: string;
     columnName: string;
-    items: Task[];
+    tasks: Task[];
   }
   
+
   export interface Board {
-    _id: string;
-    name: string;
+
+    boardId: string;
+  
+    boardName: string;
+  
     backgroundImg: string;
+  
     columns: Column[];
-    contents: {
-      columnName: string;
-      items: string[];
-    }[];
-    createdAt: Date;
-    updatedAt: Date;
+  
   }
+  

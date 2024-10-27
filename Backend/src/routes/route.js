@@ -58,4 +58,7 @@ module.exports = function(app) {
    .get(boardController.getBoardById)
    .put(boardController.updateBoard)
    .delete(boardController.deleteBoard);
+  
+  app.post('/:id/column', boardController.addColumn);
+  app.post('/:boardId/column/:columnId/task', boardController.addTask);
 };
