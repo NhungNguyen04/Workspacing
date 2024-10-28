@@ -16,10 +16,13 @@ const TOOLBAR_OPTIONS = [
     ["image", "blockquote", "code-block"],
     ["clean"],
   ]
+  interface TextEditorProps {
+    contentId: string;
+}
 
+const SAVE_INTERVAL_MS = 2000;
 
-const TextEditor: React.FC = () => {
-    const { id: documentId } = useParams()
+const TextEditor: React.FC<TextEditorProps> = ({contentId}) => {
     const [quill, setQuill] = useState<Quill | null>(null);
     const [socket, setSocket] = useState<Socket | undefined>(undefined);
 
@@ -42,7 +45,9 @@ const TextEditor: React.FC = () => {
             theme: "snow",
             modules: { toolbar: TOOLBAR_OPTIONS },
         })
-        setQuill(q)
+        quill?.enable(false);
+        q.setText("Loading...");
+        setQuill(q);
         return () => {
             q.disable()
             q.setText("Loading...")
@@ -74,7 +79,29 @@ const TextEditor: React.FC = () => {
         return () => {
             socket.off('received changes', handler);
         }
-    })
+    });
+
+    useEffect(() => {
+        if (socket == null || quill == null) return;
+        socket.once("load-document", document => {
+            quill.setContents(document);
+            quill.enable();
+        })
+        socket.emit('get-document', contentId);
+    }, [socket, quill, contentId]);
+
+
+    useEffect(() => {
+        if (socket == null || quill == null) return;
+
+        const interval = setInterval(() => {
+            socket.emit('save-document', quill.getContents());
+        }, SAVE_INTERVAL_MS);
+
+        return () => {
+            clearInterval(interval);
+        };
+    }, [socket, quill]);
 
     return (
         <div className={styles.container} ref={wrapperRef}></div>

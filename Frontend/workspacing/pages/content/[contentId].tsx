@@ -7,11 +7,11 @@ const TextEditor = dynamic(() => import('../../src/components/TextEditor'), { ss
 
 const ContentPage: React.FC = () => {
     const router = useRouter();
-    const { id } = router.query;
+    const { contentId } = router.query;
 
     return (
         <div>
-            {id && <TextEditor />}
+            {contentId && <TextEditor contentId={contentId as string}/>}
         </div>
     );
 };

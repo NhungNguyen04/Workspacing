@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const Task = require('./src/models/taskModel');
 const routes = require('./src/routes/route');
+const document = require('./src/models/documentModel')
 
 const app = express();
 const port = process.env.PORT || 3033;
@@ -46,14 +47,22 @@ app.use((req, res) => {
 
 // Socket.IO connection handler
 io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
-
+    console.log('A user connected:', socket.id);    
     // Listen for a custom event from clients
-    socket.on('send changes', (delta) => {
-        console.log('changes', delta);
-        // Emit the message to all connected clients
-        socket.broadcast.emit("received changes", delta)
-    });
+    socket.on('get-document', async documentId => {
+        console.log("document id", documentId);
+        const doc = await findOrCreateDocument(documentId);
+        socket.join(documentId);
+        socket.emit('load-document', doc.data);
+        socket.on('send changes', (delta) => {
+            // Emit the message to all connected clients
+            socket.broadcast.to(documentId).emit("received changes", delta)
+        });
+        socket.on('save-document', async data => {
+            await document.findByIdAndUpdate(documentId,  {data});
+        });
+    })
+    
 
     // Handle client disconnect
     socket.on('disconnect', () => {
@@ -61,6 +70,14 @@ io.on('connection', (socket) => {
     });
 });
 
+async function findOrCreateDocument(id) {
+    let doc = await document.findById(id);
+    if (!doc) {
+        doc = new document({ _id: id, data: "" });
+        await doc.save();
+    }
+    return doc;
+}
 // Start the server
 server.listen(port, () => {
     console.log('Workspacing RESTful API server started on: ' + port);
