@@ -1,22 +1,19 @@
-import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
-import '@/styles/globals.css'
+import { auth } from "@clerk/nextjs/server"
+import { redirect } from "next/navigation"
+import { Sidebar } from '@/components/sidebar'
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-    return (
-        <ClerkProvider >
-            <html lang="en" >
-                <body >
-                    <header className="h-20">
-                        <SignedOut>
-                            <SignInButton />
-                        </SignedOut>
-                        <SignedIn>
-                            <UserButton />
-                        </SignedIn>
-                    </header>
-                    <main className="h-100vh flex items-center justify-center">{children}</main>
-                </body>
-            </html>
-        </ClerkProvider>
-    )
+export default async function PlatformLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  
+  return (
+    <div className="flex h-screen">
+      <Sidebar />
+      <main className="flex-1 overflow-y-auto p-8">
+        {children}
+      </main>
+    </div>
+  )
 }

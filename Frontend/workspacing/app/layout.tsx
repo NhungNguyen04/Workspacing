@@ -1,38 +1,35 @@
-import {
-  ClerkProvider,
-  SignInButton,
-  SignedIn,
-  SignedOut,
-  UserButton
-} from '@clerk/nextjs'
-import { siteConfig} from '@/config/site'
+import { Inter } from 'next/font/google'
+import { ClerkProvider, SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
+import './globals.css'
+import { Sidebar } from '@/components/sidebar'
 import { Metadata } from 'next'
-import '@/styles/globals.css'
+import { siteConfig } from '@/config/site'
+
+const inter = Inter({ subsets: ['latin'] })
+import Head from 'next/head'
 
 export const metadata: Metadata = {
-
-  title: {
-    default: siteConfig.name,
-    template: `%s | ${siteConfig.name}`,
-  },
+  title: siteConfig.name,
   description: siteConfig.description,
-  icons: [
-    {
-      url: '/logo.svg',
-      href: '/logo.ico'
-    }
-  ]
+  icons: {
+    href: 'icon',
+    icon: '/logo.ico'
+  }
 }
+
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <html>
-     <body>
-      {children}
-    </body>
-  </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={inter.className}>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

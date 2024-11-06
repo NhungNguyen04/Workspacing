@@ -32,4 +32,10 @@ export const config = {
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
+  publicRoutes: [
+    "/",
+    "/sign-in",
+    "/sign-up",
+    // Add any other marketing routes that should be public
+  ],
 }
