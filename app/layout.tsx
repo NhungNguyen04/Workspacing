@@ -2,14 +2,16 @@ import { ClerkProvider } from '@clerk/nextjs'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { siteConfig } from '@/config/site'
+import { Metadata } from 'next'
 
 const inter = Inter({ subsets: ['latin'] })
 
-export const metadata = {
+export const metadata : Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
-  icon: {
-    href: '/logo.ico',
+  icons: {
+    icon: '/logo.ico',
+    href: '/logo.ico'
   }
 }
 
