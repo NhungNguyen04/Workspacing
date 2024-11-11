@@ -17,14 +17,17 @@ async function connectToDatabase() {
   return client.db('workspacing')
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type Props = {
+  params: {
+    id: string
+  }
+}
+
+export async function GET(request: NextRequest, { params }: Props) {
   const { id } = params
 
   try {
-    const { userId } = getAuth(req)
+    const { userId } = getAuth(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -56,14 +59,11 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: Props) {
   const { id } = params
 
   try {
-    const { userId } = getAuth(req)
+    const { userId } = getAuth(request)
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -76,7 +76,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid content ID format' }, { status: 400 })
     }
 
-    const { title, content } = await req.json()
+    const { title, content } = await request.json()
 
     if (!title || !content) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -100,9 +100,9 @@ export async function PUT(
       return NextResponse.json({ error: 'Content not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ message: 'Content updated successfully' }, { status: 200 })
+    return NextResponse.json({ message: 'Content updated successfully' })
   } catch (error) {
     console.error('Error updating content:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-    }
+  }
 }
