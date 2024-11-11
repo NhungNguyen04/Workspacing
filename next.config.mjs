@@ -1,8 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    experimental: {
-        serverComponentsExternalPackages: ['mongodb'],
-      },
-};
+  experimental: {
+    serverExternalPackages: ['@clerk/nextjs'], // Update this line
+  },
+  // ... any other configurations you might have
+}
 
-export default nextConfig;
+module.exports = nextConfig

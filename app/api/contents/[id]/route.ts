@@ -26,15 +26,15 @@ export async function GET(
   try {
     const { userId } = getAuth(req)
     if (!userId) {
-      return NextResponse.json('Unauthorized', { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     if (!id || id === 'undefined') {
-      return NextResponse.json('Invalid content ID', { status: 400 })
+      return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 })
     }
 
     if (!ObjectId.isValid(id)) {
-      return NextResponse.json('Invalid content ID format', { status: 400 })
+      return NextResponse.json({ error: 'Invalid content ID format' }, { status: 400 })
     }
 
     const database = await connectToDatabase()
@@ -46,13 +46,13 @@ export async function GET(
     })
 
     if (!content) {
-      return NextResponse.json('Content not found', { status: 404 })
+      return NextResponse.json({ error: 'Content not found' }, { status: 404 })
     }
 
     return NextResponse.json(content)
   } catch (error) {
     console.error('Error fetching content:', error)
-    return NextResponse.json('Internal Server Error', { status: 500 })
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
 
@@ -65,21 +65,21 @@ export async function PUT(
   try {
     const { userId } = getAuth(req)
     if (!userId) {
-      return NextResponse.json('Unauthorized', { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     if (!id || id === 'undefined') {
-      return NextResponse.json('Invalid content ID', { status: 400 })
+      return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 })
     }
 
     if (!ObjectId.isValid(id)) {
-      return NextResponse.json('Invalid content ID format', { status: 400 })
+      return NextResponse.json({ error: 'Invalid content ID format' }, { status: 400 })
     }
 
     const { title, content } = await req.json()
 
     if (!title || !content) {
-      return NextResponse.json('Missing required fields', { status: 400 })
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
     const database = await connectToDatabase()
@@ -97,12 +97,12 @@ export async function PUT(
     )
 
     if (result.matchedCount === 0) {
-      return NextResponse.json('Content not found', { status: 404 })
+      return NextResponse.json({ error: 'Content not found' }, { status: 404 })
     }
 
-    return NextResponse.json('Content updated successfully', { status: 200 })
+    return NextResponse.json({ message: 'Content updated successfully' }, { status: 200 })
   } catch (error) {
     console.error('Error updating content:', error)
-    return NextResponse.json('Internal Server Error', { status: 500 })
-  }
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    }
 }
