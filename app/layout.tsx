@@ -20,6 +20,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  
   return (
     <ClerkProvider dynamic>
       <html lang="en">

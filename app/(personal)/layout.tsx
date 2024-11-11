@@ -1,6 +1,8 @@
 'use client'
 
 import * as React from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   Bell,
   LayoutDashboard,
@@ -8,11 +10,7 @@ import {
   Calendar,
   FileText,
   Settings,
-  LayoutPanelLeft,
-  Users,
-  Plus,
   Search,
-  ChevronDown,
   LogOut,
   Menu,
 } from "lucide-react"
@@ -30,18 +28,14 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-  useSidebar,
 } from "@/components/ui/sidebar"
-import { useAuth, useOrganization, useOrganizationList, useUser } from "@clerk/nextjs"
-import { OrganizationSwitcher } from "@clerk/nextjs"
-import { opendirSync } from "fs"
+import { useAuth, useUser } from "@clerk/nextjs"
 
 const personalNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
@@ -51,20 +45,11 @@ const personalNav = [
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
 
-const teamNav = [
-  { icon: LayoutPanelLeft, label: "Boards", href: "/teamspace/boards" },
-  { icon: FileText, label: "Contents", href: "/teamspace/contents" },
-  { icon: Calendar, label: "Events", href: "/teamspace/events" },
-  { icon: Users, label: "Members", href: "/teamspace/members" },
-  { icon: Settings, label: "Settings", href: "/teamspace/settings" },
-]
-
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const { isLoaded, userId, sessionId, getToken, signOut } = useAuth()
   const { user } = useUser()
-  const { organization } = useOrganization()
-  const { setActive } = useOrganizationList()
-  const [openSidebar, setOpenSidebar] = React.useState(true);
+  const [openSidebar, setOpenSidebar] = React.useState(true)
+  const pathname = usePathname()
 
   if (!isLoaded || !userId) {
     return <div>Loading...</div>
@@ -85,7 +70,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
                 <AvatarImage src={user?.imageUrl} alt={user?.fullName || "User avatar"} />
                 <AvatarFallback>{user?.firstName?.[0] || "U"}</AvatarFallback>
               </Avatar>
-              {openSidebar &&<span>{user?.fullName}</span>}
+              {openSidebar && <span>{user?.fullName}</span>}
             </div>
           </SidebarHeader>
           <SidebarContent>
@@ -95,10 +80,17 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
                   {personalNav.map((item) => (
                     <SidebarMenuItem key={item.label}>
                       <SidebarMenuButton asChild>
-                        <a href={item.href} className="text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                        <Link
+                          href={item.href}
+                          className={`flex items-center space-x-2 ${
+                            pathname === item.href
+                              ? 'bg-accent text-accent-foreground'
+                              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                          }`}
+                        >
                           <item.icon className="h-4 w-4" />
                           <span>{item.label}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
@@ -113,28 +105,21 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
           <header className="flex h-16 items-center justify-between border-b px-4 bg-white">
             <div className="flex items-center gap-4">
               <SidebarTrigger onClick={handleOpenSidebar}>
-                <Button variant="ghost" size="icon" >
+                <Button variant="ghost" size="icon">
                   <Menu className="h-4 w-4" />
                   <span className="sr-only">Toggle sidebar</span>
                 </Button>
               </SidebarTrigger>
               <Avatar className="h-6 w-6">
                 <AvatarImage src="/logo.png" alt="logoimage" />
-                <AvatarFallback>{"Workspacing"}</AvatarFallback>
+                <AvatarFallback>WS</AvatarFallback>
               </Avatar>
               <span className="font-semibold text-gray-900">Workspacing</span>
-              <OrganizationSwitcher
-                appearance={{
-                  elements: {
-                    rootBox: "flex items-center gap-2",
-                    organizationSwitcherTrigger: "flex items-center gap-2 rounded-md border p-2",
-                  },
-                }}
-              />
-              <Button size="sm" className="gap-2" onClick={() => window.location.href = '/select-org'}>
-                <Plus className="h-4 w-4" />
-                Create
-              </Button>
+              <Link href="/teamspace" passHref>
+                <Button size="sm" className="gap-2">
+                  Switch to Teamspace
+                </Button>
+              </Link>
             </div>
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -164,43 +149,10 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
             </div>
           </header>
 
-          <div className="grid flex-1 grid-cols-[1fr_auto]">
-            {/* Main Content Area */}
-            <main className="p-6">{children}</main>
-
-            {/* Right Sidebar - Team Workspace */}
-            {organization && (
-              <Sidebar collapsible="icon" className="border-l bg-white">
-                <SidebarHeader className="flex items-center justify-center h-16 border-b px-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <Avatar className="h-6 w-6">
-                      <AvatarImage src={organization.imageUrl} alt={organization.name} />
-                      <AvatarFallback>{organization.name[0]}</AvatarFallback>
-                    </Avatar>
-                    {openSidebar&&<span className="font-semibold text-gray-900">{organization.name}</span>}
-                  </div>
-                </SidebarHeader>
-                <SidebarContent>
-                  <SidebarGroup>
-                    <SidebarGroupContent>
-                      <SidebarMenu>
-                        {teamNav.map((item) => (
-                          <SidebarMenuItem key={item.label}>
-                            <SidebarMenuButton asChild>
-                              <a href={item.href} className="text-gray-700 hover:bg-gray-100 hover:text-gray-900">
-                                <item.icon className="h-4 w-4" />
-                                <span>{item.label}</span>
-                              </a>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </SidebarGroup>
-                </SidebarContent>
-              </Sidebar>
-            )}
-          </div>
+          {/* Main Content Area */}
+          <main className="flex-1 overflow-auto p-6">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>
