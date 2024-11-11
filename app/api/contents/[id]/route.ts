@@ -17,14 +17,14 @@ async function connectToDatabase() {
   return client.db('workspacing')
 }
 
-type Props = {
-  params: {
-    id: string
-  }
-}
+// Define the route segment config
+export const dynamic = 'force-dynamic'
 
-export async function GET(request: NextRequest, { params }: Props) {
-  const { id } = params
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
+  const { id } = context.params
 
   try {
     const { userId } = getAuth(request)
@@ -59,8 +59,11 @@ export async function GET(request: NextRequest, { params }: Props) {
   }
 }
 
-export async function PUT(request: NextRequest, { params }: Props) {
-  const { id } = params
+export async function PUT(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
+  const { id } = context.params
 
   try {
     const { userId } = getAuth(request)
