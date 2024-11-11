@@ -17,17 +17,20 @@ async function connectToDatabase() {
   return client.db('workspacing')
 }
 
-export async function GET(req: NextRequest, context: any) {
-  const { id } = context?.params || {}
-
-  if (!id || typeof id !== 'string') {
-    return NextResponse.json('Invalid content ID', { status: 400 })
-  }
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params
 
   try {
     const { userId } = getAuth(req)
     if (!userId) {
       return NextResponse.json('Unauthorized', { status: 401 })
+    }
+
+    if (!id || id === 'undefined') {
+      return NextResponse.json('Invalid content ID', { status: 400 })
     }
 
     if (!ObjectId.isValid(id)) {
@@ -53,17 +56,20 @@ export async function GET(req: NextRequest, context: any) {
   }
 }
 
-export async function PUT(req: NextRequest, context: any) {
-  const { id } = context?.params || {}
-
-  if (!id || typeof id !== 'string') {
-    return NextResponse.json('Invalid content ID', { status: 400 })
-  }
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params
 
   try {
     const { userId } = getAuth(req)
     if (!userId) {
       return NextResponse.json('Unauthorized', { status: 401 })
+    }
+
+    if (!id || id === 'undefined') {
+      return NextResponse.json('Invalid content ID', { status: 400 })
     }
 
     if (!ObjectId.isValid(id)) {
