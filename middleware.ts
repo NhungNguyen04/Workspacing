@@ -7,7 +7,7 @@ export default clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect()
   }
-  (auth, req) => {
+  (auth:any, req: any) => {
     if (auth.userId && auth.isPublicRoute) {
       let path = "/select-org"
 
