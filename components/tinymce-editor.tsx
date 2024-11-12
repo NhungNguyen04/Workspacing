@@ -36,7 +36,7 @@ export default function TinyMCEEditor({ value, onChange }: TinyMCEEditorProps) {
 
   return (
     <Editor
-      apiKey='1610odp7ku8khi656gc6ruwp4n5axvuyk9znas5mpbndeanj'
+      apiKey='wo5yr5cvm21r10czqjpc8cx0jazms2ld0qx1eexiit6tvx2l'
       onInit={(evt, editor) => {
         editorRef.current = editor
         // Use a delay on init to make sure editor is fully ready
