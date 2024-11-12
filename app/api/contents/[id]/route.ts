@@ -1,30 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuth } from '@clerk/nextjs/server'
-import { MongoClient, ObjectId } from 'mongodb'
+import { ObjectId } from 'mongodb'
+import { connectToDatabase } from '@/lib/mongodb'
 
-const uri = process.env.MONGODB_URI
-if (!uri) {
-  throw new Error('MONGODB_URI is not defined')
-}
-
-let client: MongoClient | null = null
-
-async function connectToDatabase() {
-  if (!client) {
-    client = new MongoClient(uri!)
-    await client.connect()
-  }
-  return client.db('workspacing')
-}
-
-// Define the route segment config
 export const dynamic = 'force-dynamic'
 
 export async function GET(
   request: NextRequest,
-  context: { params: Record<string, string> } // Updated typing
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params
+  const { id } = await context.params
 
   try {
     const { userId } = getAuth(request)
@@ -32,12 +17,8 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!id || id === 'undefined') {
+    if (!id || id === 'undefined' || !ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 })
-    }
-
-    if (!ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'Invalid content ID format' }, { status: 400 })
     }
 
     const database = await connectToDatabase()
@@ -61,9 +42,9 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: { params: Record<string, string> } // Updated typing
+  context: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params
+  const { id } = await context.params
 
   try {
     const { userId } = getAuth(request)
@@ -71,12 +52,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!id || id === 'undefined') {
+    if (!id || id === 'undefined' || !ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 })
-    }
-
-    if (!ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'Invalid content ID format' }, { status: 400 })
     }
 
     const { title, content } = await request.json()

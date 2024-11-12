@@ -44,7 +44,7 @@ export default function ContentPage() {
       const response = await fetch('/api/contents')
       if (!response.ok) throw new Error('Failed to fetch contents')
       const data = await response.json()
-      const mappedData = data.map((item) => ({
+      const mappedData = data.map((item: any) => ({
         id: item._id,
         title: item.title,
         updatedAt: item.updatedAt

@@ -9,7 +9,7 @@ interface TinyMCEEditorProps {
 export default function TinyMCEEditor({ value, onChange }: TinyMCEEditorProps) {
   const editorRef = useRef<any>(null)
 
-  const handleEditorChange = (content) => {
+  const handleEditorChange = (content: any) => {
     onChange(content)
   }
 
@@ -58,7 +58,7 @@ export default function TinyMCEEditor({ value, onChange }: TinyMCEEditorProps) {
           { value: 'First.Name', title: 'First Name' },
           { value: 'Email', title: 'Email' },
         ],
-        ai_request: (request, respondWith) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
+        ai_request: (request: any, respondWith:any) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
         exportpdf_converter_options: { 'format': 'Letter', 'margin_top': '1in', 'margin_right': '1in', 'margin_bottom': '1in', 'margin_left': '1in' },
         exportword_converter_options: { 'document': { 'size': 'Letter' } },
         importword_converter_options: { 'formatting': { 'styles': 'inline', 'resets': 'inline', 'defaults': 'inline' } },
