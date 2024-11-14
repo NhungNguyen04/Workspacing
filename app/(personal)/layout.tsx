@@ -35,6 +35,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog"
 import { useAuth, useUser, useOrganizationList } from "@clerk/nextjs"
 
 const personalNav = [
@@ -46,15 +47,14 @@ const personalNav = [
 ]
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
-  const { isLoaded, userId, sessionId, getToken, signOut } = useAuth()
+  const { isLoaded, userId, signOut } = useAuth()
   const { user } = useUser()
-  const { setActive, userMemberships } = useOrganizationList({
-    userMemberships: {
-      infinite: true,
-    },
+  const { userMemberships } = useOrganizationList({
+    userMemberships: { infinite: true },
   })
-  
+
   const [openSidebar, setOpenSidebar] = React.useState(true)
+  const [showDialog, setShowDialog] = React.useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -70,7 +70,14 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
     if (userMemberships.count) {
       const firstOrganizationId = userMemberships.data[0].id
       router.push(`/teamspace/${firstOrganizationId}`)
+    } else {
+      setShowDialog(true)
     }
+  }
+
+  const handleCreateOrganizationRedirect = () => {
+    router.push("/select-org")
+    setShowDialog(false)
   }
 
   return (
@@ -166,6 +173,27 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
             {children}
           </main>
         </div>
+
+        {/* Dialog for Creating an Organization */}
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogOverlay className="fixed inset-0 bg-black/50" />
+          <DialogContent className="fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg">
+            <div className="text-center">
+              <h2 className="text-lg font-semibold">No Teamspace Found</h2>
+              <p className="mt-2 text-sm text-gray-600">
+                You don't have any teamspaces yet. Would you like to create one?
+              </p>
+              <div className="mt-4 flex justify-center gap-4">
+                <Button onClick={handleCreateOrganizationRedirect}>
+                  Create Teamspace
+                </Button>
+                <Button variant="outline" onClick={() => setShowDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarProvider>
   )
