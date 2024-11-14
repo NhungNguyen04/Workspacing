@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import {
   Bell,
   LayoutPanelLeft,
@@ -13,6 +13,7 @@ import {
   Search,
   LogOut,
   Menu,
+  LayoutDashboard
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -38,20 +39,20 @@ import {
 import { useAuth, useOrganization, useUser } from "@clerk/nextjs"
 import { OrganizationSwitcher } from "@clerk/nextjs"
 
-const teamNav = [
-  { icon: LayoutPanelLeft, label: "Boards", href: "/teamspace/boards" },
-  { icon: FileText, label: "Contents", href: "/teamspace/contents" },
-  { icon: Calendar, label: "Events", href: "/teamspace/events" },
-  { icon: Users, label: "Members", href: "/teamspace/members" },
-  { icon: Settings, label: "Settings", href: "/teamspace/settings" },
-]
-
 export default function TeamspaceLayout({ children }: { children: React.ReactNode }) {
   const { isLoaded, userId, sessionId, getToken, signOut } = useAuth()
   const { user } = useUser()
   const { organization } = useOrganization()
   const [openSidebar, setOpenSidebar] = React.useState(true)
   const pathname = usePathname()
+  const router = useRouter()
+
+  React.useEffect(() => {
+    // Update URL whenever organization changes
+    if (organization?.id) {
+      router.push(`/teamspace/${organization.id}`)
+    }
+  }, [organization, router])
 
   if (!isLoaded || !userId) {
     return <div>Loading...</div>
@@ -60,6 +61,15 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
   const handleOpenSidebar = () => {
     setOpenSidebar(!openSidebar)
   }
+
+  const teamNav = [
+    { icon: LayoutDashboard, label: "Dashboard", href: `/teamspace/${organization?.id}` },
+    { icon: LayoutPanelLeft, label: "Boards", href: `/teamspace/${organization?.id}/boards` },
+    { icon: Calendar, label: "Events", href: `/teamspace/${organization?.id}/events` },
+    { icon: FileText, label: "Contents", href: `/teamspace/${organization?.id}/contents` },
+    { icon: Users, label: "Members", href: `/teamspace/${organization?.id}/members` },
+    { icon: Settings, label: "Settings", href: `/teamspace/${organization?.id}/settings` },
+  ]
 
   return (
     <SidebarProvider>

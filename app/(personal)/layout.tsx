@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import {
   Bell,
   LayoutDashboard,
@@ -35,7 +35,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { useAuth, useUser } from "@clerk/nextjs"
+import { useAuth, useUser, useOrganizationList } from "@clerk/nextjs"
 
 const personalNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
@@ -48,8 +48,15 @@ const personalNav = [
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const { isLoaded, userId, sessionId, getToken, signOut } = useAuth()
   const { user } = useUser()
+  const { setActive, userMemberships } = useOrganizationList({
+    userMemberships: {
+      infinite: true,
+    },
+  })
+  
   const [openSidebar, setOpenSidebar] = React.useState(true)
   const pathname = usePathname()
+  const router = useRouter()
 
   if (!isLoaded || !userId) {
     return <div>Loading...</div>
@@ -57,6 +64,13 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
 
   const handleOpenSidebar = () => {
     setOpenSidebar(!openSidebar)
+  }
+
+  const switchToFirstOrganization = () => {
+    if (userMemberships.count) {
+      const firstOrganizationId = userMemberships.data[0].id
+      router.push(`/teamspace/${firstOrganizationId}`)
+    }
   }
 
   return (
@@ -115,11 +129,9 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
                 <AvatarFallback>WS</AvatarFallback>
               </Avatar>
               <span className="font-semibold text-gray-900">Workspacing</span>
-              <Link href="/teamspace" passHref>
-                <Button size="sm" className="gap-2">
-                  Switch to Teamspace
-                </Button>
-              </Link>
+              <Button size="sm" className="gap-2" onClick={switchToFirstOrganization}>
+                Switch to Teamspace
+              </Button>
             </div>
             <div className="flex items-center gap-4">
               <div className="relative">

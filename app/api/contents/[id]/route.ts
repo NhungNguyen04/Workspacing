@@ -86,3 +86,35 @@ export async function PUT(
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const { id } = await context.params
+
+  try {
+    const { userId } = getAuth(request)
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (!id || id === 'undefined' || !ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 })
+    }
+
+    const database = await connectToDatabase()
+    const contents = database.collection('contents')
+
+    const result = await contents.deleteOne({ _id: new ObjectId(id), userId })
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: 'Content not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ message: 'Content deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting content:', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
