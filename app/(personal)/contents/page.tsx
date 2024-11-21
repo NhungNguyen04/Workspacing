@@ -60,7 +60,7 @@ export default function Component() {
       if (!response.ok) throw new Error('Failed to fetch contents')
       const data = await response.json()
       const mappedData = data.map((item: any) => ({
-        id: item._id,
+        id: item.id,
         title: item.title,
         updatedAt: item.updatedAt
       }))
