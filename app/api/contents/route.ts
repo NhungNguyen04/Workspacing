@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuth } from '@clerk/nextjs/server'
-import { MongoClient, ObjectId } from 'mongodb'
+import { PrismaClient } from '@prisma/client'
 
-const uri = process.env.MONGODB_URI
-if (!uri) {
-  throw new Error('MONGODB_URI is not defined')
-}
-const client = new MongoClient(uri)
+const prisma = new PrismaClient()
 
 export async function GET(req: NextRequest) {
   try {
@@ -15,18 +11,16 @@ export async function GET(req: NextRequest) {
       return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    await client.connect()
-    const database = client.db('workspacing')
-    const contents = database.collection('contents')
-
-    const userContents = await contents.find({ userId }).toArray()
+    const userContents = await prisma.content.findMany({
+      where: { userId }
+    })
 
     return NextResponse.json(userContents)
   } catch (error) {
     console.error('Error fetching contents:', error)
     return new NextResponse('Internal Server Error', { status: 500 })
   } finally {
-    await client.close()
+    await prisma.$disconnect()
   }
 }
 
@@ -39,25 +33,21 @@ export async function POST(req: NextRequest) {
 
     const { title } = await req.json()
 
-    await client.connect()
-    const database = client.db('workspacing')
-    const contents = database.collection('contents')
+    const newContent = await prisma.content.create({
+      data: {
+        title,
+        content: '',
+        userId,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }
+    })
 
-    const newContent = {
-      title,
-      content: '',
-      userId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }
-
-    const result = await contents.insertOne(newContent)
-
-    return NextResponse.json({ id: result.insertedId, ...newContent })
+    return NextResponse.json(newContent)
   } catch (error) {
     console.error('Error creating content:', error)
     return new NextResponse('Internal Server Error', { status: 500 })
   } finally {
-    await client.close()
+    await prisma.$disconnect()
   }
 }

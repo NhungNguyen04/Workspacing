@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuth } from '@clerk/nextjs/server'
-import { ObjectId } from 'mongodb'
-import { connectToDatabase } from '@/lib/mongodb'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export const dynamic = 'force-dynamic'
 
@@ -17,16 +18,17 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!id || id === 'undefined' || !ObjectId.isValid(id)) {
+    if (!id || id === 'undefined') {
       return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 })
     }
 
-    const database = await connectToDatabase()
-    const contents = database.collection('contents')
-
-    const content = await contents.findOne({
-      _id: new ObjectId(id),
-      userId,
+    const content = await prisma.content.findUnique({
+      where: {
+        id_userId: {
+          id,
+          userId,
+        },
+      },
     })
 
     if (!content) {
@@ -52,7 +54,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!id || id === 'undefined' || !ObjectId.isValid(id)) {
+    if (!id || id === 'undefined') {
       return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 })
     }
 
@@ -62,21 +64,21 @@ export async function PUT(
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const database = await connectToDatabase()
-    const contents = database.collection('contents')
-
-    const result = await contents.updateOne(
-      { _id: new ObjectId(id), userId },
-      {
-        $set: {
-          title,
-          content,
-          updatedAt: new Date(),
+    const updatedContent = await prisma.content.update({
+      where: {
+        id_userId: {
+          id,
+          userId,
         },
-      }
-    )
+      },
+      data: {
+        title,
+        content,
+        updatedAt: new Date(),
+      },
+    })
 
-    if (result.matchedCount === 0) {
+    if (!updatedContent) {
       return NextResponse.json({ error: 'Content not found' }, { status: 404 })
     }
 
@@ -99,16 +101,20 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    if (!id || id === 'undefined' || !ObjectId.isValid(id)) {
+    if (!id || id === 'undefined') {
       return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 })
     }
 
-    const database = await connectToDatabase()
-    const contents = database.collection('contents')
+    const deletedContent = await prisma.content.delete({
+      where: {
+        id_userId: {
+          id,
+          userId,
+        },
+      },
+    })
 
-    const result = await contents.deleteOne({ _id: new ObjectId(id), userId })
-
-    if (result.deletedCount === 0) {
+    if (!deletedContent) {
       return NextResponse.json({ error: 'Content not found' }, { status: 404 })
     }
 
