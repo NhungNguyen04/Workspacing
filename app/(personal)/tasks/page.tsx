@@ -20,6 +20,7 @@ interface Task {
   repeat: 'daily' | 'weekly' | 'monthly' | null
   status: 'in-progress' | 'completed' | 'cancelled'
   category?: string
+  createdAt: Date
 }
 
 export default function Component() {
@@ -31,9 +32,9 @@ export default function Component() {
   const [currentDate, setCurrentDate] = useState(new Date())
 
   // Group tasks by status
-  const inProgressTasks = tasks.filter(task => task.status === 'in-progress' && isSameDay(task.dueDate, currentDate))
-  const completedTasks = tasks.filter(task => task.status === 'completed' && isSameDay(task.dueDate, currentDate))
-  const cancelledTasks = tasks.filter(task => task.status === 'cancelled' && isSameDay(task.dueDate, currentDate))
+  const inProgressTasks = tasks.filter(task => task.status === 'in-progress' && isSameDay(task.createdAt, currentDate))
+  const completedTasks = tasks.filter(task => task.status === 'completed' && isSameDay(task.createdAt, currentDate))
+  const cancelledTasks = tasks.filter(task => task.status === 'cancelled' && isSameDay(task.createdAt, currentDate))
 
   const addTask = async () => {
     if (newTask.trim()) {
@@ -43,7 +44,8 @@ export default function Component() {
         dueDate: selectedDate,
         reminder,
         repeat: selectedRepeat,
-        status: 'in-progress'
+        status: 'in-progress',
+        createdAt: new Date()
       }
       const response = await fetch('/api/tasks', {
         method: 'POST',

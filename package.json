@@ -60,8 +60,11 @@
   },
   "devDependencies": {
     "@types/axios": "^0.14.4",
+    "@types/jest": "^29.5.14",
     "@types/node": "22.7.9",
     "@types/react": "^18.3.12",
+    "@types/react-beautiful-dnd": "^13.1.8",
+    "@types/uuid": "^10.0.0",
     "prisma": "^5.22.0",
     "typescript": "5.6.3"
   }

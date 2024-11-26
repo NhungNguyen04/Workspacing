@@ -1,5 +1,6 @@
 'use client'
 
+import { Protect } from '@clerk/nextjs'
 import * as React from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
@@ -81,6 +82,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   }
 
   return (
+    <Protect>
     <SidebarProvider>
       <div className="grid w-full h-screen grid-cols-[auto_1fr]">
         {/* Left Sidebar - Personal Workspace */}
@@ -196,5 +198,6 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
         </Dialog>
       </div>
     </SidebarProvider>
+    </Protect>
   )
 }

@@ -18,21 +18,42 @@ model Board {
   title     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  teamspaceId String
+  columns Column[]
+  
+  @@index([teamspaceId])
+  @@unique([id, teamspaceId])
+}
+
+model Column {
+  id String @id @default(cuid())
+  title String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  boardId String
+  board   Board   @relation(fields: [boardId], references: [id])
+  tasks Task[]
+
+  @@index([boardId])
+  @@unique([id, boardId])
 }
 
 model Task {
   id        String   @id @default(cuid())
   title     String
-  dueDate   DateTime
+  dueDate   DateTime?
   reminder  Boolean  @default(false)
-  repeat    String?  // 'daily', 'weekly', 'monthly'
+  repeat    String // 'daily', 'weekly', 'monthly'
   status    String   @default("in-progress") // 'in-progress', 'completed', 'cancelled'
-  category  String?
+  category  String
   userId    String   // For authentication
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  columnId  String?
+  column    Column?  @relation(fields: [columnId], references: [id])
 
   @@index([userId])
+  @@index([columnId])
 }
 
 model Content {
@@ -46,3 +67,4 @@ model Content {
   @@index([userId])
   @@unique([id, userId])
 }
+
