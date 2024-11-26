@@ -20,6 +20,7 @@ model Board {
   updatedAt DateTime @updatedAt
   teamspaceId String
   columns Column[]
+  color String
   
   @@index([teamspaceId])
   @@unique([id, teamspaceId])

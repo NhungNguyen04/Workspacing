@@ -35,7 +35,7 @@ interface Content {
   updatedAt: string
 }
 
-export default function Component() {
+export default function ContentPage() {
   const [contents, setContents] = useState<Content[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [newContentTitle, setNewContentTitle] = useState('')

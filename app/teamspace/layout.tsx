@@ -48,11 +48,16 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
   const router = useRouter()
 
   React.useEffect(() => {
-    // Update URL whenever organization changes
+    // Redirect only if the user is not already on a valid organization route
     if (organization?.id) {
-      router.push(`/teamspace/${organization.id}`)
+      const currentPath = pathname.split('/').slice(0, 3).join('/'); // Extract `/teamspace/[id]`
+      const organizationPath = `/teamspace/${organization.id}`;
+      if (currentPath !== organizationPath) {
+        router.push(organizationPath);
+      }
     }
-  }, [organization, router])
+  }, [organization, pathname, router]);
+  
 
   if (!isLoaded || !userId) {
     return <div>Loading...</div>
