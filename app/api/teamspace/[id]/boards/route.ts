@@ -24,9 +24,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }
 }
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, context: { params: { id: string } }) {
   try {
-    const teamspaceId = params.id
+    const teamspaceId = context.params.id
 
     const boards = await prisma.board.findMany({
       where: { teamspaceId },
