@@ -173,7 +173,10 @@ export default function BoardsPage() {
               <Button
                 size="icon"
                 variant="ghost"
-                onClick={() => setEditingBoard(board)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setEditingBoard(board)
+                }}
                 disabled={isProcessing} // Disable button while processing
               >
                 <Pencil className="w-4 h-4" />
@@ -181,7 +184,10 @@ export default function BoardsPage() {
               <Button
                 size="icon"
                 variant="ghost"
-                onClick={() => handleDeleteBoard(board.id)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDeleteBoard(board.id)
+                }}
                 disabled={isProcessing} // Disable button while processing
               >
                 <Trash2 className="w-4 h-4" />

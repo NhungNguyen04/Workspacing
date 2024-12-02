@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as boardService from "@/services/boardService";
 
-export async function PUT(request: NextRequest, { params }: { params: { boardId: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ boardId: string }>}) {
     const searchParams = request.nextUrl.searchParams;
     const teamspaceId = searchParams.get('teamspaceId');
-    const { boardId } = params;
+    const { boardId } = await context.params;
 
     if (!teamspaceId || !boardId) {
         return NextResponse.json({ error: 'Missing teamspaceId or boardId' }, { status: 400 });
@@ -24,10 +24,10 @@ export async function PUT(request: NextRequest, { params }: { params: { boardId:
     }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { boardId: string } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ boardId: string }>}) {
     const searchParams = request.nextUrl.searchParams;
     const teamspaceId = searchParams.get('teamspaceId');
-    const { boardId } = params;
+    const { boardId } = await context.params;
 
     if (!teamspaceId || !boardId) {
         return NextResponse.json({ error: 'Missing teamspaceId or boardId' }, { status: 400 });
