@@ -13,6 +13,7 @@
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@fontsource/work-sans": "^5.1.0",
+    "@hello-pangea/dnd": "^17.0.0",
     "@lexical/history": "^0.20.0",
     "@lexical/react": "^0.20.0",
     "@lexical/rich-text": "^0.20.0",
@@ -53,7 +54,8 @@
     "tailwindcss": "^3.4.14",
     "tailwindcss-animate": "^1.0.7",
     "tinymce": "^7.5.0",
-    "uuid": "^10.0.0"
+    "uuid": "^10.0.0",
+    "zod": "^3.23.8"
   },
   "engines": {
     "node": ">=18"

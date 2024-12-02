@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
 import { useState, useEffect } from "react"
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import {
@@ -12,45 +12,34 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { MessageCircleQuestionIcon as QuestionMarkCircle, Pencil, Trash2 } from 'lucide-react'
+import { MessageCircleQuestionIcon as QuestionMarkCircle, Pencil, Trash2, Router } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 
-// Generate a random pastel color
+interface Board {
+  id: string
+  title: string
+  color: string
+}
+
 function generatePastelColor() {
   const hue = Math.floor(Math.random() * 360)
   return `hsl(${hue}, 70%, 95%)`
 }
 
-interface Board {
-  id: number
-  title: string
-  color: string
-  updatedAt: string
-}
-
-interface CreateBoardInput {
-  title: string
-  color: string
-}
-
-interface UpdateBoardInput {
-  title: string
-}
-
-export default function BoardPage() {
+export default function BoardsPage() {
   const params = useParams()
+  const router = useRouter();
   const [boards, setBoards] = useState<Board[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const { teamspaceId } = params ?? {}
+  const [isProcessing, setIsProcessing] = useState(false) // Add processing state
   const [newTitle, setNewTitle] = useState("")
   const [editingBoard, setEditingBoard] = useState<Board | null>(null)
-  const maxBoards = 9
-  const remaining = maxBoards - boards.length
+  const teamspaceId = params.teamspaceId as string
 
   const fetchBoards = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`/api/${teamspaceId}/boards`)
+      const response = await fetch(`/api/teamspace/boards?teamspaceId=${teamspaceId}`)
       if (!response.ok) throw new Error('Failed to fetch boards')
       const data = await response.json()
       setBoards(data)
@@ -66,17 +55,20 @@ export default function BoardPage() {
   }
 
   useEffect(() => {
-    fetchBoards()
+    if (teamspaceId) {
+      fetchBoards()
+    }
   }, [teamspaceId])
 
   const handleAddBoard = async () => {
-    if (boards.length < maxBoards && newTitle.trim()) {
+    if (newTitle.trim()) {
       try {
-        const newBoard: CreateBoardInput = {
+        setIsProcessing(true) // Set processing state
+        const newBoard = {
           title: newTitle,
           color: generatePastelColor(),
         }
-        const response = await fetch(`/api/${teamspaceId}/boards`, {
+        const response = await fetch(`/api/teamspace/boards?teamspaceId=${teamspaceId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(newBoard),
@@ -95,17 +87,19 @@ export default function BoardPage() {
           description: 'Failed to create board. Please try again.',
           variant: 'destructive',
         })
+      } finally {
+        setIsProcessing(false) // Reset processing state
       }
     }
   }
 
-  const handleUpdateBoard = async (id: number, updatedTitle: string) => {
+  const handleUpdateBoard = async (id: string, updatedTitle: string) => {
     try {
-      const updateData: UpdateBoardInput = { title: updatedTitle }
-      const response = await fetch(`/api/${teamspaceId}/boards/${id}`, {
+      setIsProcessing(true) // Set processing state
+      const response = await fetch(`/api/teamspace/boards/${id}?teamspaceId=${teamspaceId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData),
+        body: JSON.stringify({ title: updatedTitle }),
       })
       if (!response.ok) throw new Error('Failed to update board')
       const updatedBoard = await response.json()
@@ -121,12 +115,15 @@ export default function BoardPage() {
         description: 'Failed to update board. Please try again.',
         variant: 'destructive',
       })
+    } finally {
+      setIsProcessing(false) // Reset processing state
     }
   }
 
-  const handleDeleteBoard = async (id: number) => {
+  const handleDeleteBoard = async (id: string) => {
     try {
-      const response = await fetch(`/api/${teamspaceId}/boards/${id}`, {
+      setIsProcessing(true) // Set processing state
+      const response = await fetch(`/api/teamspace/boards/${id}?teamspaceId=${teamspaceId}`, {
         method: 'DELETE',
       })
       if (!response.ok) throw new Error('Failed to delete board')
@@ -141,6 +138,8 @@ export default function BoardPage() {
         description: 'Failed to delete board. Please try again.',
         variant: 'destructive',
       })
+    } finally {
+      setIsProcessing(false) // Reset processing state
     }
   }
 
@@ -150,12 +149,14 @@ export default function BoardPage() {
 
   return (
     <div className="p-6 max-w-[660px] mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Boards</h1>
       <div className="grid grid-cols-3 gap-4">
         {boards.map((board) => (
           <Card
             key={board.id}
             className="w-[200px] h-[200px] p-4 cursor-pointer hover:shadow-lg transition-shadow flex flex-col items-center justify-center relative"
             style={{ backgroundColor: board.color }}
+            onClick={() => router.push(`/boards/${board.id}`)}
           >
             {editingBoard?.id === board.id ? (
               <Input
@@ -173,6 +174,7 @@ export default function BoardPage() {
                 size="icon"
                 variant="ghost"
                 onClick={() => setEditingBoard(board)}
+                disabled={isProcessing} // Disable button while processing
               >
                 <Pencil className="w-4 h-4" />
               </Button>
@@ -180,6 +182,7 @@ export default function BoardPage() {
                 size="icon"
                 variant="ghost"
                 onClick={() => handleDeleteBoard(board.id)}
+                disabled={isProcessing} // Disable button while processing
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
@@ -187,37 +190,35 @@ export default function BoardPage() {
           </Card>
         ))}
 
-        {remaining > 0 && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Card className="w-[200px] h-[200px] p-4 cursor-pointer hover:shadow-lg transition-shadow bg-gray-50 flex flex-col items-center justify-center gap-2">
-                <h2 className="text-lg font-semibold">Create new</h2>
-                <p className="text-sm text-gray-600">{remaining} remaining</p>
-                <QuestionMarkCircle className="w-6 h-6 text-gray-400" />
-              </Card>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle className="text-xl">Create New Board</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <Input
-                  placeholder="Enter board title"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleAddBoard()
-                    }
-                  }}
-                />
-                <Button onClick={handleAddBoard} disabled={!newTitle.trim()}>
-                  Create Board
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Card className="w-[200px] h-[200px] p-4 cursor-pointer hover:shadow-lg transition-shadow bg-gray-50 flex flex-col items-center justify-center gap-2">
+              <h2 className="text-lg font-semibold">Create new</h2>
+              <QuestionMarkCircle className="w-6 h-6 text-gray-400" />
+            </Card>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-xl">Create New Board</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <Input
+                placeholder="Enter board title"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleAddBoard()
+                  }
+                }}
+                disabled={isProcessing} // Disable input while processing
+              />
+              <Button onClick={handleAddBoard} disabled={!newTitle.trim() || isProcessing}>
+                {isProcessing ? 'Processing...' : 'Create Board'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

@@ -1,5 +1,4 @@
-import { auth, clerkClient } from "@clerk/nextjs/server"
-import { useOrganization } from "@clerk/clerk-react";
+import { auth } from "@clerk/nextjs/server"
 
 export default async function TeamspacePage() {
   const { userId } = await auth();
