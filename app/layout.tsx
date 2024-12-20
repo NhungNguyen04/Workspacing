@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { siteConfig } from '@/config/site'
 import { Metadata } from 'next'
+import {ToastContainer } from 'react-toastify' // Import Toaster component
+import 'react-toastify/dist/ReactToastify.css' // Add this line to import styles
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,7 +26,10 @@ export default function RootLayout({
   return (
     <ClerkProvider dynamic>
       <html lang="en">
-        <body className={inter.className}>{children}</body>
+        <body className={inter.className}>
+          {children}
+          <ToastContainer /> {/* Add Toaster component */}
+        </body>
       </html>
     </ClerkProvider>
   )

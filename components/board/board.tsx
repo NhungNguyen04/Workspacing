@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { Plus } from 'lucide-react'
 import { Button } from "@/components/ui/button"
@@ -29,9 +29,14 @@ const initialColumns: Column[] = [
   { id: 'done', title: 'Done', tasks: [] },
 ]
 
-export function Board({ boardId, boardTitle }: BoardComponentProps) {
+export const Board: React.FC<BoardComponentProps> = ({ boardId, boardTitle }) => {
   const [columns, setColumns] = useState<Column[]>(initialColumns)
   const [newTask, setNewTask] = useState('')
+
+  useEffect(() => {
+    // Fetch board data using boardId
+    // Example: fetchBoardData(boardId).then(data => setColumns(data.columns))
+  }, [boardId])
 
   const onDragEnd = (result: DropResult) => {
     const { source, destination } = result

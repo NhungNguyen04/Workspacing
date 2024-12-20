@@ -21,40 +21,26 @@ export async function createBoard(teamspaceId: string, title: string, color: str
   });
 }
 
-export async function getBoardById(teamspaceId: string, id: string): Promise<Board | null> {
+export async function getBoardById(id: string): Promise<Board | null> {
   return prisma.board.findUnique({
     where: {
-      id_teamspaceId: {
-        id,
-        teamspaceId,
-      },
+      id,
     },
   });
 }
 
-export async function updateBoard(teamspaceId: string, id: string, title: string): Promise<Board> {
+export async function updateBoard(id: string, title: string): Promise<Board> {
   return prisma.board.update({
-    where: {
-      id_teamspaceId: {
-        id,
-        teamspaceId,
-      },
-    },
+    where: { id },
     data: {
       title,
-      teamspaceId,
       updatedAt: new Date(),
     },
   });
 }
 
-export async function deleteBoard(teamspaceId: string, id: string): Promise<Board> {
+export async function deleteBoard(id: string): Promise<Board> {
   return prisma.board.delete({
-    where: {
-      id_teamspaceId: {
-        id,
-        teamspaceId,
-      },
-    },
+    where: {id},
   });
 }

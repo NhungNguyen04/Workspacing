@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Loader2, Save, ArrowLeft } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 
-const TinyMCEEditor = dynamic(() => import('@/components/tinymce-editor'), { ssr: false })
+const TinyMCEEditor = dynamic(() => import('@/components/content/tinymce-editor'), { ssr: false })
 
 interface Content {
   _id: string

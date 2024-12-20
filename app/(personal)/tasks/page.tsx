@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { format, addDays, isSameDay } from 'date-fns'
+import { format, addDays } from 'date-fns'
 import { Calendar as CalendarIcon, Clock, Repeat, Plus, X, Check, Pause, ChevronDown } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,118 +10,28 @@ import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-
-interface Task {
-  id: string
-  title: string
-  dueDate: Date
-  reminder: boolean
-  repeat: 'daily' | 'weekly' | 'monthly' | null
-  status: 'in-progress' | 'completed' | 'cancelled'
-  category?: string
-  createdAt: Date
-}
+import { useTaskLogic } from './index'
 
 export default function Component() {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [newTask, setNewTask] = useState('')
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-  const [selectedRepeat, setSelectedRepeat] = useState<Task['repeat']>(null)
-  const [reminder, setReminder] = useState(false)
-  const [currentDate, setCurrentDate] = useState(new Date())
-
-  // Group tasks by status
-  const inProgressTasks = tasks.filter(task => task.status === 'in-progress' && isSameDay(task.createdAt, currentDate))
-  const completedTasks = tasks.filter(task => task.status === 'completed' && isSameDay(task.createdAt, currentDate))
-  const cancelledTasks = tasks.filter(task => task.status === 'cancelled' && isSameDay(task.createdAt, currentDate))
-
-  const addTask = async () => {
-    if (newTask.trim()) {
-      const task: Task = {
-        id: Math.random().toString(36).substr(2, 9),
-        title: newTask,
-        dueDate: selectedDate,
-        reminder,
-        repeat: selectedRepeat,
-        status: 'in-progress',
-        createdAt: new Date()
-      }
-      const response = await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(task),
-      })
-
-      if (response.ok) {
-        const savedTask = await response.json()
-        setTasks([...tasks, savedTask])
-        setNewTask('')
-        setSelectedDate(new Date())
-        setSelectedRepeat(null)
-        setReminder(false)
-      }
-
-    }
-  }
-
-  const updateTaskStatus = (taskId: string, newStatus: Task['status']) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, status: newStatus } : task
-    ))
-  }
-
-  // Check and update tasks at midnight
-  useEffect(() => {
-    const checkDate = () => {
-      const now = new Date()
-      if (now.getHours() === 0 && now.getMinutes() === 0) {
-        setTasks(prevTasks => 
-          prevTasks.map(task => {
-            if (task.status === 'in-progress') {
-              const newDueDate = new Date(task.dueDate)
-              newDueDate.setDate(newDueDate.getDate() + 1)
-              return { ...task, dueDate: newDueDate }
-            }
-            return task
-          })
-        )
-      }
-    }
-
-    const interval = setInterval(checkDate, 60000) // Check every minute
-    return () => clearInterval(interval)
-  }, [])
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const response = await fetch('/api/tasks')
-      const data = await response.json()
-      setTasks(data)
-    }
-
-    fetchTasks()
-  }, [])
-
-  useEffect(() => {
-    const handleBeforeUnload = async (event: BeforeUnloadEvent) => {
-      event.preventDefault()
-      await fetch('/api/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(tasks),
-      })
-    }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
-    }
-  }, [tasks])
+  const {
+    tasks,
+    newTask,
+    setNewTask,
+    selectedDate,
+    setSelectedDate,
+    selectedRepeat,
+    setSelectedRepeat,
+    reminder,
+    setReminder,
+    currentDate,
+    setCurrentDate,
+    inProgressTasks,
+    completedTasks,
+    cancelledTasks,
+    addTask,
+    updateTaskStatus,
+    Task
+  } = useTaskLogic()
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -190,7 +99,7 @@ export default function Component() {
               </Label>
             </div>
 
-            <Select value={selectedRepeat || ''} onValueChange={(value) => setSelectedRepeat(value as Task['repeat'])}>
+            <Select value={selectedRepeat || ''} onValueChange={(value) => setSelectedRepeat(value as "daily" | "weekly" | "monthly" | null)}>
               <SelectTrigger className="w-[140px]">
                 <div className="flex items-center gap-2">
                   <Repeat className="h-4 w-4" />

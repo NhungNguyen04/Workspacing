@@ -23,7 +23,6 @@ model Board {
   color String
   
   @@index([teamspaceId])
-  @@unique([id, teamspaceId])
 }
 
 model Column {
