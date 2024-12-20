@@ -111,6 +111,8 @@ export const useTaskLogic = () => {
 
     useEffect(() => {
         const handleBeforeUnload = async (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = ''; // Required for Chrome to show the confirmation dialog
             toast.info('Your tasks are being saved.');
             if (newTasks.length > 0) {
                 await fetch('/api/tasks', {
