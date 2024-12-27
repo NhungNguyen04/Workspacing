@@ -1,60 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as boardService from "@/services/boardService";
+import { auth } from "@clerk/nextjs/server";
 
-export async function PUT(request: NextRequest, context: { params: Promise<{ boardId: string }>}) {
-    const { boardId } = await context.params;
+export async function GET(
+  request: NextRequest,
+  { params }: { params: { boardId: string } }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    if ( !boardId) {
-        return NextResponse.json({ error: 'Missing teamspaceId or boardId' }, { status: 400 });
+  try {
+    const board = await boardService.getBoardById(params.boardId);
+    if (!board) {
+      return NextResponse.json({ error: 'Board not found' }, { status: 404 });
     }
-
-    try {
-        const { title } = await request.json();
-        if (!title) {
-            return NextResponse.json({ error: 'Invalid board data' }, { status: 400 });
-        }
-
-        const updatedBoard = await boardService.updateBoard(boardId, title);
-        return NextResponse.json(updatedBoard);
-    } catch (error) {
-        console.error("Error updating board:", error);
-        return NextResponse.json({ error: 'Failed to update board' }, { status: 500 });
-    }
+    return NextResponse.json(board);
+  } catch (error) {
+    console.error("Error fetching board:", error);
+    return NextResponse.json({ error: 'Failed to fetch board' }, { status: 500 });
+  }
 }
 
-export async function DELETE(request: NextRequest, context: { params: Promise<{ boardId: string }>}) {
-    const { boardId } = await context.params;
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { boardId: string } }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    if (!boardId) {
-        return NextResponse.json({ error: 'Missing teamspaceId or boardId' }, { status: 400 });
+  try {
+    const { title } = await request.json();
+    if (!title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
-    try {
-        const deletedBoard = await boardService.deleteBoard(boardId);
-        return NextResponse.json(deletedBoard);
-    } catch (error) {
-        console.error("Error deleting board:", error);
-        return NextResponse.json({ error: 'Failed to delete board' }, { status: 500 });
-    }
+    const board = await boardService.updateBoard(params.boardId, title);
+    return NextResponse.json(board);
+  } catch (error) {
+    console.error("Error updating board:", error);
+    return NextResponse.json({ error: 'Failed to update board' }, { status: 500 });
+  }
 }
 
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { boardId: string } }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-export async function GET(request: NextRequest, context: {params: Promise<{boardId: string}>}) {
-    const { boardId } = await context.params;
-
-    if (!boardId) {
-        return NextResponse.json({ error: 'Missing teamspaceId or boardId' }, { status: 400 });
-    }
-
-    try {
-        const board = await boardService.getBoardById(boardId);
-        if (!board) {
-            return NextResponse.json({ message: 'Board not found' }, { status: 404 });
-        }
-        return NextResponse.json(board);
-    } catch (error) {
-        console.error('Error fetching board:', error);
-        return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
-    }
-
+  try {
+    await boardService.deleteBoard(params.boardId);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting board:", error);
+    return NextResponse.json({ error: 'Failed to delete board' }, { status: 500 });
+  }
 }

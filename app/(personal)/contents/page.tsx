@@ -22,37 +22,81 @@ import {
 } from '@/components/ui/dialog'
 import { toast } from 'react-toastify'
 import Link from 'next/link'
-import {
-  fetchContents,
-  handleCreateContent,
-  handleUpdateTitle,
-  handleDeleteContent,
-} from './index'
-
-interface Content {
-  id: string
-  title: string
-  updatedAt: string
-}
+import { getContents, createContent, updateContent, deleteContent } from './index'
+import { useContentStore } from '@/store/ContentStore'
+import { Content } from '@/types/content'
 
 export default function ContentPage() {
-  const [contents, setContents] = useState<Content[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { contents, setContents, isLoading, setLoading, error, setError, previousUrl, setPreviousUrl } = useContentStore()
   const [newContentTitle, setNewContentTitle] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState('')
+  const [editingContent, setEditingContent] = useState('')
   const router = useRouter()
   const { user, isLoaded, isSignedIn } = useUser()
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
-      router.push('/sign-in')
-    } else if (isSignedIn) {
-      fetchContents(setContents, setIsLoading, toast)
+    const fetchData = async () => {
+      if (!isLoaded || !isSignedIn) return;
+      setLoading(true);
+      try {
+        const data = await getContents();
+        const mappedData: Content[] = data.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          content: item.content || '',
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+          userId: item.userId
+        }));
+        setContents(mappedData);
+      } catch (error) {
+        toast.error('Failed to load contents');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isLoaded, isSignedIn, router, setContents, setLoading]); // Removed contents from dependencies
+
+  const handleCreateContent = async () => {
+    if (!newContentTitle.trim()) return
+    setIsCreating(true)
+    try {
+      const newContent = await createContent(newContentTitle)
+      setContents([...contents, newContent])
+      setNewContentTitle('')
+      toast.success('New content created successfully.')
+    } catch (error) {
+      toast.error('Failed to create new content. Please try again.')
+    } finally {
+      setIsCreating(false)
     }
-  }, [isLoaded, isSignedIn, router])
+  }
+
+  const handleUpdateTitle = async (id: string, title: string, content: string) => {
+    try {
+      const updatedContent = await updateContent(id, title, content)
+      setContents(contents.map(content => content.id === id ? updatedContent : content))
+      setEditingId(null)
+      toast.success('Content updated successfully.')
+    } catch (error) {
+      toast.error('Failed to update content. Please try again.')
+    }
+  }
+
+  const handleDeleteContent = async (id: string) => {
+    try {
+      await deleteContent(id)
+      setContents(contents.filter(content => content.id !== id))
+      toast.success('Content deleted successfully.')
+    } catch (error) {
+      toast.error('Failed to delete content. Please try again.')
+    }
+  }
 
   const filteredContents = contents.filter(content =>
     content.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -93,7 +137,7 @@ export default function ContentPage() {
                   value={newContentTitle}
                   onChange={(e) => setNewContentTitle(e.target.value)}
                 />
-                <Button onClick={() => handleCreateContent(newContentTitle, setContents, setNewContentTitle, setIsCreating, toast)} disabled={isCreating}>
+                <Button onClick={handleCreateContent} disabled={isCreating}>
                   {isCreating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -120,17 +164,23 @@ export default function ContentPage() {
               key={content.id}
               href={`/contents/${content.id}`}
               className="block p-4 border rounded-lg hover:bg-gray-50 transition-colors relative group"
+              onClick={() => {setPreviousUrl(window.location.pathname)}}
             >
               <div className="flex items-center mb-2">
                 {editingId === content.id ? (
                   <form onSubmit={(e) => {
                     e.preventDefault()
-                    handleUpdateTitle(content.id, editingTitle, setContents, setEditingId, toast)
+                    handleUpdateTitle(content.id, editingTitle, editingContent)
                   }} className="flex-1">
                     <Input
                       value={editingTitle}
                       onChange={(e) => setEditingTitle(e.target.value)}
                       className="w-full"
+                    />
+                    <Input
+                      value={editingContent}
+                      onChange={(e) => setEditingContent(e.target.value)}
+                      className="w-full mt-2"
                     />
                   </form>
                 ) : (
@@ -149,6 +199,7 @@ export default function ContentPage() {
                     e.stopPropagation()
                     setEditingId(content.id)
                     setEditingTitle(content.title)
+                    setEditingContent(content.content)
                   }}
                 >
                   <Pencil className="h-4 w-4" />
@@ -159,7 +210,7 @@ export default function ContentPage() {
                   onClick={(e) => {
                     e.preventDefault()
                     e.stopPropagation()
-                    handleDeleteContent(content.id, setContents, toast)
+                    handleDeleteContent(content.id)
                   }}
                 >
                   <Trash2 className="h-4 w-4" />

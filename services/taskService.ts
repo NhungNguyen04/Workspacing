@@ -5,22 +5,19 @@ export async function createTask(data: TaskInput, userId: string) {
   if (data.dueDate && data.dueDate < new Date()) {
     throw new Error('Due date cannot be in the past');
   }
-  if (data.columnId) {
-    const columnExists = await prisma.column.findUnique({
-      where: { id: data.columnId },
-    });
-    if (!columnExists) {
-      throw new Error('Invalid columnId');
-    }
-  }
 
+  const columnId = data.columnId || null;
+  const { position, ...restData } = data;
+  
   return prisma.task.create({
     data: {
-      ...data,
-      repeat: data.repeat ?? '',
-      category: data.category ?? '',
-      columnId: data.columnId ?? null, // Ensure columnId can be null
-      dueDate: data.dueDate ?? null, // Ensure dueDate can be null
+      ...restData,
+      repeat: restData.repeat || '',
+      category: restData.category || '',
+      column: columnId ? { connect: { id: columnId } } : undefined,
+      columnId: undefined,
+      dueDate: restData.dueDate || null,
+      position: position ?? undefined, // Only include position if it has a value
       userId,
     },
   });
@@ -32,22 +29,19 @@ export async function createTasks(tasks: TaskInput[], userId: string) {
     if (data.dueDate && data.dueDate < new Date()) {
       throw new Error('Due date cannot be in the past');
     }
-    if (data.columnId) {
-      const columnExists = await prisma.column.findUnique({
-        where: { id: data.columnId },
-      });
-      if (!columnExists) {
-        throw new Error('Invalid columnId');
-      }
-    }
+
+    const columnId = data.columnId || null;
+    const { position, ...restData } = data;
 
     const createdTask = await prisma.task.create({
       data: {
-        ...data,
-        repeat: data.repeat ?? '',
-        category: data.category ?? '',
-        columnId: data.columnId ?? null,
-        dueDate: data.dueDate ?? null,
+        ...restData,
+        repeat: restData.repeat || '',
+        category: restData.category || '',
+        column: columnId ? { connect: { id: columnId } } : undefined,
+        columnId: undefined,
+        dueDate: restData.dueDate || null,
+        position: position ?? undefined, // Only include position if it has a value
         userId,
       },
     });
@@ -62,24 +56,22 @@ export async function getTasks(userId: string) {
   });
 }
 
-
 export async function updateTask(data: Task, userId: string) {
   if (data.dueDate && data.dueDate < new Date()) {
     throw new Error('Due date cannot be in the past');
   }
-  if (data.columnId) {
-    const columnExists = await prisma.column.findUnique({
-      where: { id: data.columnId },
-    });
-    if (!columnExists) {
-      throw new Error('Invalid columnId');
-    }
-  }
+
+  const columnId = data.columnId || null;
 
   return prisma.task.update({
     where: { id: data.id },
     data: {
       ...data,
+      repeat: data.repeat || '',  // Ensure repeat is never null
+      category: data.category || '',
+      column: columnId ? { connect: { id: columnId } } : undefined,
+      columnId: undefined, // Remove columnId from direct assignment
+      dueDate: data.dueDate || null,
     },
   });
 }
@@ -103,6 +95,9 @@ export async function updateTasks(tasks: Task[], userId: string) {
       where: { id: data.id },
       data: {
         ...data,
+        repeat: data.repeat || '',  // Ensure repeat is never null
+        category: data.category || '',
+        dueDate: data.dueDate || null,
       },
     });
     updatedTasks.push(updatedTask);

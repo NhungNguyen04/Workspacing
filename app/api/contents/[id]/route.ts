@@ -58,7 +58,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Content not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Content updated successfully' });
+    return NextResponse.json(updatedContent);
   } catch (error) {
     console.error('Error updating content:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

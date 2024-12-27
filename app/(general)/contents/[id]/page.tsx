@@ -7,91 +7,83 @@ import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader2, Save, ArrowLeft } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
+import { toast } from 'react-toastify'
+import { getContent, updateContent } from '.'
+import 'react-toastify/dist/ReactToastify.css'
+import { useContentStore } from '@/store/ContentStore'
 
 const TinyMCEEditor = dynamic(() => import('@/components/content/tinymce-editor'), { ssr: false })
 
-interface Content {
-  _id: string
-  title: string
-  content: string
-}
 
 export default function ContentEditorPage() {
+  const { activeContent, setActiveContent, isLoading, setLoading, error, setError, previousUrl } = useContentStore()
+  const [isSaving, setIsSaving] = useState(false)
   const router = useRouter()
   const params = useParams()
-  const { id } = params ?? {} // Ensure params are destructured safely
-
-  const [content, setContent] = useState<Content | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { id } = params ?? {}
   const { isLoaded, isSignedIn } = useUser()
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.push('/sign-in')
     } else if (isSignedIn && typeof id === 'string') {
-      fetchContent(id)
+      fetchContent()
     }
   }, [isLoaded, isSignedIn, id])
 
-  const fetchContent = async (contentId: string) => {
-    setIsLoading(true)
+  const fetchContent = async () => {
+    if (typeof id !== 'string') return
+    setLoading(true)
     try {
-      const response = await fetch(`/api/contents/${contentId}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch content')
-      }
-      const data = await response.json()
-      setContent(data)
+      const data = await getContent(id)
+      // Convert string dates to Date objects
+      setActiveContent({
+        ...data,
+        createdAt: new Date(data.createdAt),
+        updatedAt: new Date(data.updatedAt)
+      })
     } catch (error) {
       console.error('Error fetching content:', error)
       setError(error instanceof Error ? error.message : 'Failed to load content')
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to load content',
-        variant: 'destructive',
-      })
+      toast.error('Failed to load content')
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
   const handleSave = async () => {
-    if (!content) return
+    if (!activeContent || typeof id !== 'string') return
     setIsSaving(true)
     try {
-      const response = await fetch(`/api/contents/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(content),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save content')
-      }
-
-      toast({
-        title: 'Success',
-        description: 'Content saved successfully.',
-      })
+      await updateContent(id, activeContent)
+      toast.success('Content saved successfully.')
     } catch (error) {
       console.error('Error saving content:', error)
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to save content',
-        variant: 'destructive',
-      })
+      toast.error('Failed to save content')
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleBack = () => {
-    handleSave();
-    router.push('/contents')
+    handleSave()
+    router.push(previousUrl || '/')
   }
+
+  useEffect(() => {
+    const handleBeforeUnload = async (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = ''; // Required for Chrome to show the confirmation dialog
+      toast.info('Your content is being saved.');
+      await handleSave();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  });
 
   if (!isLoaded || !isSignedIn) {
     return (
@@ -123,7 +115,7 @@ export default function ContentEditorPage() {
     )
   }
 
-  if (!content) {
+  if (!activeContent) {
     return (
       <div className="container mx-auto p-4">
         <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
@@ -145,8 +137,8 @@ export default function ContentEditorPage() {
           Back
         </Button>
         <Input
-          value={content.title}
-          onChange={(e) => setContent({ ...content, title: e.target.value })}
+          value={activeContent.title}
+          onChange={(e) => setActiveContent({ ...activeContent, title: e.target.value })}
           className="text-2xl font-bold flex-1"
         />
         <Button onClick={handleSave} disabled={isSaving}>
@@ -164,8 +156,8 @@ export default function ContentEditorPage() {
         </Button>
       </div>
       <TinyMCEEditor
-        value={content.content}
-        onChange={(value) => setContent({ ...content, content: value })}
+        value={activeContent.content}
+        onChange={(value) => setActiveContent({ ...activeContent, content: value })}
       />
     </div>
   )

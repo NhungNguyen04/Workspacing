@@ -17,6 +17,9 @@ export async function createBoard(teamspaceId: string, title: string, color: str
       color,
       createdAt: new Date(),
       updatedAt: new Date(),
+      columns: {
+        create: []
+      }
     },
   });
 }
@@ -44,3 +47,4 @@ export async function deleteBoard(id: string): Promise<Board> {
     where: {id},
   });
 }
+

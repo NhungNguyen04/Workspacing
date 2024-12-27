@@ -1,31 +1,40 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { Board } from '@/components/board/board'
-import { useEffect, useState } from 'react'
-import { toast } from '@/hooks/use-toast'
+import { BoardInterface } from '@/components/board/board'
+import { useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Board as BoardType } from '@/types/board'
-
+import { useBoardStore } from '@/store/BoardStore'
+import { fetchBoard } from './index'
 
 export default function BoardPage() {
   const params = useParams()
   const boardId = params?.boardId as string
-  const [loading, setIsLoading] = useState(false);
-  const [board, setBoard] = useState<BoardType|null>(null);
   const { isLoaded, isSignedIn } = useUser()
   const router = useRouter()
-  const [error, setError] = useState<String | null>(null);
+  
+  const { activeBoard, isLoading, error, setActiveBoard, setLoading, setError, previousUrl } = useBoardStore()
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
       router.push('/sign-in')
     } else if (isSignedIn && typeof boardId === 'string') {
-      fetchBoard(boardId)
+      loadBoard(boardId)
     }
   }, [isLoaded, isSignedIn, boardId])
+
+  const loadBoard = async (boardId: string) => {
+    setLoading(true)
+    const data = await fetchBoard(boardId)
+    if (data) {
+      setActiveBoard(data)
+    } else {
+      setError('Failed to load board')
+    }
+    setLoading(false)
+  }
 
   if (!isLoaded || !isSignedIn) {
     return (
@@ -36,7 +45,7 @@ export default function BoardPage() {
   }
 
   const handleBack = () => {
-    router.push('/')
+    router.push(previousUrl || '/')
   }
 
   if (error) {
@@ -53,7 +62,7 @@ export default function BoardPage() {
     )
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
@@ -61,29 +70,7 @@ export default function BoardPage() {
     )
   }
 
-  const fetchBoard = async (boardId: any) => {
-    setIsLoading(true);
-    try{
-      const response = await fetch(`/api/teamspace/boards/${boardId}`);
-      console.log("response", response)
-      if(!response.ok) {
-        toast({ title: "Error", description: "Failed to fetch content" });
-        setError(((error as unknown) as Error).message || 'Failed to load content')
-        throw new Error('Failed to fetch content');
-
-      } else {
-        const data = await response.json();
-        setBoard(data);
-      } 
-    } catch(error) {
-      console.error('Error fetching content:', error);
-      toast({ title: "Error", description: "Failed to fetch content" });
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  if (!board) {
+  if (!activeBoard) {
     return (
       <div className="container mx-auto p-4">
         <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
@@ -98,8 +85,8 @@ export default function BoardPage() {
   }
 
   return (
-    <div className="container mx-auto px-4">
-      <Board boardId={boardId} boardTitle={board?.title} />
+    <div className="h-full w-auto" style={{ background: activeBoard.color.startsWith('http') ? `url(${activeBoard.color}) center/cover` : activeBoard.color }}>
+      <BoardInterface />
     </div>
   )
 }

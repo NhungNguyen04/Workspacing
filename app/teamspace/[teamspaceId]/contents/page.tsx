@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { toast } from '@/hooks/use-toast'
 import Link from 'next/link'; // Import Link from Next.js
+import { useContentStore } from '@/store/ContentStore'
 
 interface Content {
   id: string
@@ -36,22 +37,22 @@ interface Content {
 }
 
 export default function ContentPage() {
-  const [contents, setContents] = useState<Content[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { contents, setContents, isLoading, setLoading, error, setError } = useContentStore()
   const [newContentTitle, setNewContentTitle] = useState('')
   const [isCreating, setIsCreating] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState('')
   const router = useRouter()
-  const params = useParams();
-  const teamspaceId = params.teamspaceId as string;
+  const params = useParams()
+  const teamspaceId = params?.teamspaceId as string
 
   useEffect(() => {
-      fetchContents()
-  }, [ router])
+    fetchContents()
+  }, [router])
 
   const fetchContents = async () => {
+    setLoading(true)
     try {
       const response = await fetch('/api/contents')
       if (!response.ok) throw new Error('Failed to fetch contents')
@@ -63,13 +64,14 @@ export default function ContentPage() {
       }))
       setContents(mappedData)
     } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to load contents')
       toast({
         title: 'Error',
         description: 'Failed to load contents. Please try again.',
         variant: 'destructive',
       })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 

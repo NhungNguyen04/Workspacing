@@ -14,12 +14,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { MessageCircleQuestionIcon as QuestionMarkCircle, Pencil, Trash2, Router } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
-
-interface Board {
-  id: string
-  title: string
-  color: string
-}
+import { getBoards, createBoard, updateBoard, deleteBoard, fetchImages } from '.'
+import { Board } from '@/types/board'
+import { useBoardStore } from '@/store/BoardStore'
 
 function generatePastelColor() {
   const hue = Math.floor(Math.random() * 360)
@@ -29,19 +26,41 @@ function generatePastelColor() {
 export default function BoardsPage() {
   const params = useParams()
   const router = useRouter();
-  const [boards, setBoards] = useState<Board[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isProcessing, setIsProcessing] = useState(false) // Add processing state
+  const { boards, setBoards, isLoading, setLoading, error, setError, previousUrl, setPreviousUrl } = useBoardStore()
+  const [isProcessing, setIsProcessing] = useState(false)
   const [newTitle, setNewTitle] = useState("")
   const [editingBoard, setEditingBoard] = useState<Board | null>(null)
-  const teamspaceId = params.teamspaceId as string
+  const teamspaceId = params?.teamspaceId as string
+  const [images, setImages] = useState<Array<Record<string, any>>>([])
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string>("")
+  const [isLoadingImages, setIsLoadingImages] = useState(true)
+  const [imageError, setImageError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const loadImages = async () => {
+      try {
+        setIsLoadingImages(true)
+        setImageError(null)
+        const fetchedImages = await fetchImages()
+        if (fetchedImages) {
+          setImages(fetchedImages)
+        } else {
+          setImageError('Failed to load images')
+        }
+      } catch (error) {
+        console.error('Error loading images:', error)
+        setImageError('Failed to load images')
+      } finally {
+        setIsLoadingImages(false)
+      }
+    }
+    loadImages()
+  }, [])
 
   const fetchBoards = async () => {
     try {
-      setIsLoading(true)
-      const response = await fetch(`/api/teamspace/boards?teamspaceId=${teamspaceId}`)
-      if (!response.ok) throw new Error('Failed to fetch boards')
-      const data = await response.json()
+      setLoading(true)
+      const data = await getBoards(teamspaceId)
       setBoards(data)
     } catch (error) {
       toast({
@@ -49,66 +68,44 @@ export default function BoardsPage() {
         description: 'Failed to load boards. Please try again.',
         variant: 'destructive',
       })
+      setError('Failed to load boards')
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
-  useEffect(() => {
-    if (teamspaceId) {
-      fetchBoards()
-    }
-  }, [teamspaceId])
-
   const handleAddBoard = async () => {
-    if (newTitle.trim()) {
-      try {
-        setIsProcessing(true) // Set processing state
-        const newBoard = {
-          title: newTitle,
-          color: generatePastelColor(),
-        }
-        const response = await fetch(`/api/teamspace/boards?teamspaceId=${teamspaceId}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newBoard),
-        })
-        if (!response.ok) throw new Error('Failed to create board')
-        const createdBoard = await response.json()
-        setBoards([...boards, createdBoard])
-        setNewTitle("")
-        toast({
-          title: 'Success',
-          description: 'Board created successfully.',
-        })
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to create board. Please try again.',
-          variant: 'destructive',
-        })
-      } finally {
-        setIsProcessing(false) // Reset processing state
-      }
+    if (!newTitle.trim()) return;
+    
+    try {
+      setIsProcessing(true)
+      const newBoard = await createBoard(teamspaceId, {
+        title: newTitle,
+        color: selectedImageUrl? selectedImageUrl : generatePastelColor(), // Add the selected image URL
+        imageUrl: selectedImageUrl, // Add the selected image URL
+      })
+      setBoards([...boards, newBoard])
+      setNewTitle("")
+      setSelectedImageUrl("") // Reset selected image
+      toast({ title: 'Success', description: 'Board created successfully.' })
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create board. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsProcessing(false)
     }
   }
 
   const handleUpdateBoard = async (id: string, updatedTitle: string) => {
     try {
-      setIsProcessing(true) // Set processing state
-      const response = await fetch(`/api/teamspace/boards/${id}?teamspaceId=${teamspaceId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: updatedTitle }),
-      })
-      if (!response.ok) throw new Error('Failed to update board')
-      const updatedBoard = await response.json()
+      setIsProcessing(true)
+      const updatedBoard = await updateBoard(teamspaceId, id, updatedTitle)
       setBoards(boards.map(board => board.id === id ? updatedBoard : board))
       setEditingBoard(null)
-      toast({
-        title: 'Success',
-        description: 'Board updated successfully.',
-      })
+      toast({ title: 'Success', description: 'Board updated successfully.' })
     } catch (error) {
       toast({
         title: 'Error',
@@ -116,22 +113,16 @@ export default function BoardsPage() {
         variant: 'destructive',
       })
     } finally {
-      setIsProcessing(false) // Reset processing state
+      setIsProcessing(false)
     }
   }
 
   const handleDeleteBoard = async (id: string) => {
     try {
-      setIsProcessing(true) // Set processing state
-      const response = await fetch(`/api/teamspace/boards/${id}?teamspaceId=${teamspaceId}`, {
-        method: 'DELETE',
-      })
-      if (!response.ok) throw new Error('Failed to delete board')
+      setIsProcessing(true)
+      await deleteBoard(teamspaceId, id)
       setBoards(boards.filter(board => board.id !== id))
-      toast({
-        title: 'Success',
-        description: 'Board deleted successfully.',
-      })
+      toast({ title: 'Success', description: 'Board deleted successfully.' })
     } catch (error) {
       toast({
         title: 'Error',
@@ -139,9 +130,21 @@ export default function BoardsPage() {
         variant: 'destructive',
       })
     } finally {
-      setIsProcessing(false) // Reset processing state
+      setIsProcessing(false)
     }
   }
+
+  const handleNavigate = async (id: string) => {
+    router.push(`/boards/${id}`)
+    setPreviousUrl(window.location.pathname)
+  }
+
+  useEffect(() => {
+    if (boards) return
+    if (teamspaceId && !boards) {
+      fetchBoards()
+    }
+  }, [teamspaceId, boards])
 
   if (isLoading) {
     return <div className="p-6 text-center">Loading boards...</div>
@@ -152,48 +155,51 @@ export default function BoardsPage() {
       <h1 className="text-2xl font-bold mb-6">Boards</h1>
       <div className="grid grid-cols-3 gap-4">
         {boards.map((board) => (
-          <Card
-            key={board.id}
-            className="w-[200px] h-[200px] p-4 cursor-pointer hover:shadow-lg transition-shadow flex flex-col items-center justify-center relative"
-            style={{ backgroundColor: board.color }}
-            onClick={() => router.push(`/boards/${board.id}`)}
-          >
-            {editingBoard?.id === board.id ? (
-              <Input
-                value={editingBoard.title}
-                onChange={(e) => setEditingBoard({ ...editingBoard, title: e.target.value })}
-                onBlur={() => handleUpdateBoard(board.id, editingBoard.title)}
-                className="text-lg font-semibold text-center bg-transparent border-none"
-                autoFocus
-              />
-            ) : (
-              <h2 className="text-lg font-semibold text-center">{board.title}</h2>
-            )}
-            <div className="absolute top-2 right-2 flex gap-2">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setEditingBoard(board)
-                }}
-                disabled={isProcessing} // Disable button while processing
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDeleteBoard(board.id)
-                }}
-                disabled={isProcessing} // Disable button while processing
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </Card>
+                <Card
+                key={board.id}
+                className="w-[200px] h-[200px] p-4 cursor-pointer hover:shadow-lg transition-shadow flex flex-col items-center justify-center relative"
+                style={{ background: board.color.startsWith('http') ? `url(${board.color}) center/cover` : board.color }}
+                onClick={() => handleNavigate(board.id)}
+                >
+                {board.color.startsWith('http') && (
+                  <div className="absolute inset-0 bg-slate-200 bg-opacity-20"></div>
+                )}
+                {editingBoard?.id === board.id ? (
+                  <Input
+                  value={editingBoard.title}
+                  onChange={(e) => setEditingBoard({ ...editingBoard, title: e.target.value })}
+                  onBlur={() => handleUpdateBoard(board.id, editingBoard.title)}
+                  className="text-lg font-semibold text-center bg-transparent border-none"
+                  autoFocus
+                  />
+                ) : (
+                  <h2 className="text-lg font-semibold text-center text-wrap">{board.title}</h2>
+                )}
+                <div className="absolute top-2 right-2 flex gap-2">
+                  <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setEditingBoard(board)
+                  }}
+                  disabled={isProcessing} // Disable button while processing
+                  >
+                  <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteBoard(board.id)
+                  }}
+                  disabled={isProcessing} // Disable button while processing
+                  >
+                  <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
+                </Card>
         ))}
 
         <Dialog>
@@ -203,7 +209,7 @@ export default function BoardsPage() {
               <QuestionMarkCircle className="w-6 h-6 text-gray-400" />
             </Card>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle className="text-xl">Create New Board</DialogTitle>
             </DialogHeader>
@@ -213,13 +219,51 @@ export default function BoardsPage() {
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
+                  if (e.key === "Enter" && newTitle.trim()) { // Removed selectedImageUrl check
                     handleAddBoard()
                   }
                 }}
                 disabled={isProcessing} // Disable input while processing
               />
-              <Button onClick={handleAddBoard} disabled={!newTitle.trim() || isProcessing}>
+              
+              <div className="grid grid-cols-3 gap-2 min-h-[200px]">
+                {isLoadingImages ? (
+                  <div className="col-span-3 flex items-center justify-center">
+                    Loading images...
+                  </div>
+                ) : imageError ? (
+                  <div className="col-span-3 flex items-center justify-center text-red-500">
+                    {imageError}
+                  </div>
+                ) : images.length === 0 ? (
+                  <div className="col-span-3 flex items-center justify-center">
+                    No images available
+                  </div>
+                ) : (
+                  images.map((image) => (
+                    <div
+                      key={image.id}
+                      className={`
+                        relative aspect-video cursor-pointer overflow-hidden rounded-lg
+                        ${selectedImageUrl === image.urls.regular ? 'ring-2 ring-4 ring-green-200' : ''}
+                      `}
+                      onClick={() => setSelectedImageUrl(image.urls.regular)}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={image.urls.small}
+                        alt={image.alt_description || 'Unsplash image'}
+                        className="object-cover w-full h-full hover:scale-105 transition-transform"
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <Button 
+                onClick={handleAddBoard} 
+                disabled={!newTitle.trim() || isProcessing} // Removed selectedImageUrl check
+              >
                 {isProcessing ? 'Processing...' : 'Create Board'}
               </Button>
             </div>

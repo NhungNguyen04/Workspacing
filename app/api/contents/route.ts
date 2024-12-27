@@ -6,14 +6,14 @@ export async function GET(req: NextRequest) {
   try {
     const { userId } = getAuth(req);
     if (!userId) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const userContents = await getUserContents(userId);
     return NextResponse.json(userContents);
   } catch (error) {
     console.error('Error fetching contents:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
 
@@ -21,14 +21,18 @@ export async function POST(req: NextRequest) {
   try {
     const { userId } = getAuth(req);
     if (!userId) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { title } = await req.json();
-    const newContent = await createContent(userId, title);
+    const body = await req.json();
+    if (!body.title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    }
+
+    const newContent = await createContent(userId, body.title);
     return NextResponse.json(newContent);
   } catch (error) {
     console.error('Error creating content:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -38,11 +38,19 @@ import {
 } from "@/components/ui/sidebar"
 import { useAuth, useOrganization, useUser } from "@clerk/nextjs"
 import { OrganizationSwitcher } from "@clerk/nextjs"
+import {startCase} from "lodash";
+
+function useMetaData(organization: any) {
+  React.useEffect(() => {
+    document.title = startCase(organization?.name || "Organization");
+  }, [organization]);
+}
 
 export default function TeamspaceLayout({ children }: { children: React.ReactNode }) {
   const { isLoaded, userId, sessionId, getToken, signOut } = useAuth()
   const { user } = useUser()
   const { organization } = useOrganization()
+  useMetaData(organization);
   const [openSidebar, setOpenSidebar] = React.useState(true)
   const pathname = usePathname()
   const router = useRouter()
@@ -50,7 +58,7 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
   React.useEffect(() => {
     // Redirect only if the user is not already on a valid organization route
     if (organization?.id) {
-      const currentPath = pathname.split('/').slice(0, 3).join('/'); // Extract `/teamspace/[id]`
+      const currentPath = (pathname ?? '').split('/').slice(0, 3).join('/'); // Extract `/teamspace/[id]`
       const organizationPath = `/teamspace/${organization.id}`;
       if (currentPath !== organizationPath) {
         router.push(organizationPath);

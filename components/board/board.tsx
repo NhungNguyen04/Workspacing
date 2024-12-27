@@ -1,166 +1,176 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
+import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd'
 import { Plus } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import BoardHeader from './board-header'
+import { Board } from '@/types/board'
+import { Column } from '@/types/column'
+import { Task } from '@/types/task'
+import ColumnComponent from './column'
+import { useBoardStore } from '@/store/BoardStore'
 
-interface Task {
-  id: string
-  content: string
-}
 
-interface Column {
-  id: string
-  title: string
-  tasks: Task[]
-}
+export const BoardInterface: React.FC = () => {
+  const [columns, setColumns] = useState<Column[]>([])
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const {activeBoard, setActiveBoard} = useBoardStore()
 
-interface BoardComponentProps {
-  boardId: string
-  boardTitle: string
-}
-
-const initialColumns: Column[] = [
-  { id: 'todo', title: 'To Do', tasks: [{ id: 'task-1', content: 'Sample task' }] },
-  { id: 'inprogress', title: 'In Progress', tasks: [] },
-  { id: 'done', title: 'Done', tasks: [] },
-]
-
-export const Board: React.FC<BoardComponentProps> = ({ boardId, boardTitle }) => {
-  const [columns, setColumns] = useState<Column[]>(initialColumns)
-  const [newTask, setNewTask] = useState('')
+  const board = activeBoard;
 
   useEffect(() => {
-    // Fetch board data using boardId
-    // Example: fetchBoardData(boardId).then(data => setColumns(data.columns))
-  }, [boardId])
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
 
-  const onDragEnd = (result: DropResult) => {
-    const { source, destination } = result
+        // Fetch columns for the board
+        const columnsData = board?.columns ? board.columns : [];
+        console.log(columnsData)
+        setColumns(Array.isArray(columnsData) ? columnsData : [])
 
-    // If there's no destination, we don't need to do anything
-    if (!destination) return
+        // Fetch tasks
+        const tasksRes = await fetch('/api/tasks')
+        if (!tasksRes.ok) throw new Error('Failed to fetch tasks')
+        const tasksData = await tasksRes.json()
+        setTasks(Array.isArray(tasksData) ? tasksData : [])
 
-    // If the source and destination are the same, we don't need to do anything
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+        console.error('Error fetching data:', err)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    // Find the source and destination columns
-    const sourceColumn = columns.find(col => col.id === source.droppableId)
-    const destColumn = columns.find(col => col.id === destination.droppableId)
+    fetchData()
+  }, [board?.id])
 
-    if (!sourceColumn || !destColumn) return
+  const handleDragEnd = async (result: DropResult) => {
+    const { destination, source, type } = result;
 
-    // Create new arrays for the tasks
-    const sourceTasks = Array.from(sourceColumn.tasks)
-    const destTasks = source.droppableId === destination.droppableId
-      ? sourceTasks
-      : Array.from(destColumn.tasks)
+    if (!destination) return;
 
-    // Remove the task from the source
-    const [removed] = sourceTasks.splice(source.index, 1)
+    // Handle column reordering
+    if (type === "column") {
+      const items = Array.from(columns);
+      const [reorderedItem] = items.splice(source.index, 1);
+      items.splice(destination.index, 0, reorderedItem);
 
-    // Insert the task into the destination
-    destTasks.splice(destination.index, 0, removed)
+      const updatedColumns = items.map((item, index) => ({
+        ...item,
+        position: index,
+      }));
 
-    // Create a new columns array with the updated tasks
-    const newColumns = columns.map(col => {
-      if (col.id === source.droppableId) {
-        return { ...col, tasks: sourceTasks }
-      }
-      if (col.id === destination.droppableId) {
-        return { ...col, tasks: destTasks }
-      }
-      return col
-    })
+      setColumns(updatedColumns);
+      await fetch('/api/columns', {
+        method: 'PUT',
+        body: JSON.stringify(updatedColumns),
+      });
+    }
 
-    setColumns(newColumns)
+    // Handle task reordering
+    if (type === "task") {
+      const items = Array.from(tasks);
+      const [reorderedItem] = items.splice(source.index, 1);
+      items.splice(destination.index, 0, reorderedItem);
+
+      const updatedTasks = items.map((item, index) => ({
+        ...item,
+        position: index,
+        columnId: destination.droppableId,
+      }));
+
+      setTasks(updatedTasks);
+      await fetch('/api/tasks', {
+        method: 'PUT',
+        body: JSON.stringify(updatedTasks),
+      });
+    }
   }
 
-  const addTask = (columnId: string) => {
-    if (newTask.trim() === '') return
+  const handleAddColumn = async () => {
+    const newColumn: Partial<Column> = {
+      title: "New Column",
+      position: columns.length,
+      boardId: board?.id,
+    };
 
-    const newTaskItem: Task = {
-      id: `task-${Date.now()}`,
-      content: newTask,
-    }
+    const response = await fetch(`/api/columns?boardId=${board?.id}`, {
+      method: 'POST',
+      body: JSON.stringify(newColumn),
+    });
 
-    const newColumns = columns.map(col =>
-      col.id === columnId
-        ? { ...col, tasks: [...col.tasks, newTaskItem] }
-        : col
-    )
+    const createdColumn = await response.json();
+    setColumns([...columns, createdColumn]);
+  }
 
-    setColumns(newColumns)
-    setNewTask('')
+  const handleAddTask = async (columnId: string) => {
+    const newTask = {
+      title: "New Task",
+      status: "in-progress",
+      reminder: false,
+      repeat: "",
+      category: "",
+      columnId,
+      position: tasks.filter(t => t.columnId === columnId).length,
+    };
+
+    const response = await fetch('/api/tasks', {
+      method: 'POST',
+      body: JSON.stringify(newTask),
+    });
+
+    const createdTask = await response.json();
+    setTasks([...tasks, createdTask]);
+  }
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>
+  }
+
+  if (error) {
+    return <div className="flex justify-center items-center h-screen text-red-500">{error}</div>
   }
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">{boardTitle}</h2>
-      <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex gap-4">
-          {columns.map(column => (
-            <div key={column.id} className="bg-gray-100 p-4 rounded-lg w-80">
-              <h3 className="font-semibold mb-4">{column.title}</h3>
-              <Droppable droppableId={column.id}>
-                {(provided) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className="min-h-[200px]"
-                  >
-                    {column.tasks.map((task, index) => (
-                      <Draggable key={task.id} draggableId={task.id} index={index}>
-                        {(provided) => (
-                          <Card
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className="mb-2"
-                          >
-                            <CardContent className="p-2">
-                              {task.content}
-                            </CardContent>
-                          </Card>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-              <div className="mt-4">
-                <Input
-                  type="text"
-                  placeholder="Add a task"
-                  value={newTask}
-                  onChange={(e) => setNewTask(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      addTask(column.id)
-                    }
-                  }}
-                />
+    <div>
+      <BoardHeader/>
+      <div className="ml-10">
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="board" type="column" direction="horizontal">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="flex gap-4"
+              >
+                {columns?.map((column, index) => (
+                  <ColumnComponent
+                    key={column.id}
+                    column={column}
+                    tasks={tasks.filter(task => task.columnId === column.id)}
+                    index={index}
+                    onAddTask={handleAddTask}
+                  />
+                ))}
+                {provided.placeholder}
                 <Button
-                  onClick={() => addTask(column.id)}
-                  className="mt-2 w-full"
                   variant="outline"
+                  className="flex h-12 w-[272px] items-center justify-center gap-2"
+                  onClick={handleAddColumn}
                 >
-                  <Plus className="h-4 w-4 mr-2" /> Add Task
+                  <Plus className="h-4 w-4" />
+                  Add Column
                 </Button>
               </div>
-            </div>
-          ))}
-        </div>
-      </DragDropContext>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </div>
     </div>
   )
 }

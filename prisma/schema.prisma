@@ -32,6 +32,7 @@ model Column {
   updatedAt DateTime @updatedAt
   boardId String
   board   Board   @relation(fields: [boardId], references: [id])
+  position Int
   tasks Task[]
 
   @@index([boardId])
@@ -51,9 +52,11 @@ model Task {
   updatedAt DateTime @updatedAt
   columnId  String?
   column    Column?  @relation(fields: [columnId], references: [id])
+  position  Int?     // Changed from Int to Int?
 
   @@index([userId])
   @@index([columnId])
+  @@unique([columnId, position])
 }
 
 model Content {

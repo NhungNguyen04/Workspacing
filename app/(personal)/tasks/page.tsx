@@ -1,6 +1,7 @@
 'use client'
 
-import { format, addDays } from 'date-fns'
+import { useState, useEffect } from 'react'
+import { format, addDays, isSameDay } from 'date-fns'
 import { Calendar as CalendarIcon, Clock, Repeat, Plus, X, Check, Pause, ChevronDown } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,28 +11,105 @@ import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { useTaskLogic } from './index'
+import { fetchTasks, createTasks, updateTasks as updateTasksApi } from './index'
+import { toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import { Task } from '@/types/task'
 
 export default function Component() {
-  const {
-    tasks,
-    newTask,
-    setNewTask,
-    selectedDate,
-    setSelectedDate,
-    selectedRepeat,
-    setSelectedRepeat,
-    reminder,
-    setReminder,
-    currentDate,
-    setCurrentDate,
-    inProgressTasks,
-    completedTasks,
-    cancelledTasks,
-    addTask,
-    updateTaskStatus,
-    Task
-  } = useTaskLogic()
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [newTask, setNewTask] = useState('')
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [selectedRepeat, setSelectedRepeat] = useState<Task['repeat'] | null>('')
+  const [reminder, setReminder] = useState(false)
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [tasksToUpdate, setTasksToUpdate] = useState<Task[]>([])
+  const [newTasks, setNewTasks] = useState<Task[]>([])
+
+  // Group tasks by status
+  const inProgressTasks = tasks.filter(task => task.status === 'in-progress' && isSameDay(task.createdAt, currentDate))
+  const completedTasks = tasks.filter(task => task.status === 'completed' && isSameDay(task.createdAt, currentDate))
+  const cancelledTasks = tasks.filter(task => task.status === 'cancelled' && isSameDay(task.createdAt, currentDate))
+
+  const addTask = () => {
+    if (newTask.trim()) {
+      const task: Task = {
+        id: Math.random().toString(36).substr(2, 9),
+        title: newTask,
+        dueDate: selectedDate,
+        reminder,
+        repeat: selectedRepeat || '',
+        status: 'in-progress',
+        category: '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        userId: '', // This will be set by the server
+        columnId: '', // Required by interface
+        position: undefined
+      }
+      setNewTasks([...newTasks, task])
+      setTasks([...tasks, task])
+      setNewTask('')
+    }
+  }
+
+  const updateTaskStatus = (taskId: string, newStatus: Task['status']) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, status: newStatus } : task
+    ))
+    setNewTasks(newTasks.map(task=>
+      task.id === taskId ? {...task, status: newStatus} : task
+    ))
+    const taskToUpdate = tasks.find(task => task.id === taskId);
+    if (taskToUpdate) {
+      setTasksToUpdate(prev => [...prev, { ...taskToUpdate, status: newStatus }]);
+    }
+  }
+
+  useEffect(() => {
+    const checkDate = () => {
+      const now = new Date()
+      if (now.getHours() === 0 && now.getMinutes() === 0) {
+        setTasks(prevTasks => 
+          prevTasks.map(task => {
+            if (task.status === 'in-progress') {
+              const newDueDate = task.dueDate ? new Date(task.dueDate) : new Date()
+              newDueDate.setDate(newDueDate.getDate() + 1)
+              return { ...task, dueDate: newDueDate }
+            }
+            return task
+          })
+        )
+      }
+    }
+
+    const interval = setInterval(checkDate, 60000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    fetchTasks().then(setTasks)
+  }, [])
+
+  useEffect(() => {
+    const handleBeforeUnload = async (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+      toast.info('Your tasks are being saved.')
+      
+      if (newTasks.length > 0) {
+        await createTasks(newTasks)
+      }
+      if (tasksToUpdate.length > 0) {
+        await updateTasksApi(tasksToUpdate)
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [newTasks, tasksToUpdate])
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
@@ -132,7 +210,7 @@ export default function Component() {
                 <div className="space-y-1">
                   <div className="font-medium">{task.title}</div>
                   <div className="text-sm text-muted-foreground">
-                    Due {format(task.dueDate, 'PP')}
+                    Due {task.dueDate ? format(task.dueDate, 'PP') : 'No due date'}
                   </div>
                   <div className="flex gap-2">
                     {task.reminder && (
@@ -178,7 +256,7 @@ export default function Component() {
                 <div className="space-y-1">
                   <div className="font-medium line-through">{task.title}</div>
                   <div className="text-sm text-muted-foreground">
-                    Due {format(task.dueDate, 'PP')}
+                    Due {format(task.dueDate ?? new Date(), 'PP')}
                   </div>
                 </div>
                 <Button
@@ -203,7 +281,7 @@ export default function Component() {
                 <div className="space-y-1">
                   <div className="font-medium line-through">{task.title}</div>
                   <div className="text-sm text-muted-foreground">
-                    Due {format(task.dueDate, 'PP')}
+                    Due {format(task.dueDate ?? new Date(), 'PP')}
                   </div>
                 </div>
                 <Button
