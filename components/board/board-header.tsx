@@ -11,10 +11,12 @@ export default function BoardHeader() {
 
   return (
     <div className="flex-1">
-      <div className="h-16 w-full bg-neutral-100 bg-opacity-60 pl-4 mb-4 items-center flex">
-        <Button variant="outline" size="icon" style={{background: 'transparent', border: 'none'}} onClick={()=> {router.push(previousUrl || "/")}}><ChevronLeft className="text-primary"/></Button>
-        <h1 className="text-2xl font-bold">{activeBoard?.title}</h1>
-        <div className="flex space-x-2">
+      <div className="h-16 w-full bg-white bg-opacity-60 pl-4 mb-4 items-center flex border border-transparent border-t-0 border-l-0 border-r-0 border-b-4 border-b-gradient-to-r from-green-200 via-blue-200 to-blue-500 shadow-lg shadow-blue-500/50">
+        <Button variant="outline" size="icon" style={{background: 'transparent', border: 'none'}} onClick={()=> {router.push(previousUrl || "/")}}>
+          <ChevronLeft className="text-primary"/>
+        </Button>
+        <h1 className="text-2xl font-bold text-primary ml-4">{activeBoard?.title}</h1>
+        <div className="flex space-x-2 ml-auto pr-4">
           <Button style={{ background: 'transparent', color: 'black' }}>Invite</Button>
           <Button style={{ background: 'transparent', color: 'black' }}>Settings</Button>
         </div>

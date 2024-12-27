@@ -8,6 +8,7 @@ import { Loader2, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBoardStore } from '@/store/BoardStore'
 import { fetchBoard } from './index'
+import { set } from 'lodash'
 
 export default function BoardPage() {
   const params = useParams()
@@ -18,23 +19,24 @@ export default function BoardPage() {
   const { activeBoard, isLoading, error, setActiveBoard, setLoading, setError, previousUrl } = useBoardStore()
 
   useEffect(() => {
+    if (activeBoard?.id === boardId) return
+    if (!boardId) return
+    if (boardId) {
+      fetchBoard(boardId)
+        .then((board) => {
+          setActiveBoard(board)
+          setLoading(false)
+          setError(null)
+        })
+        .catch((error) => {
+          setError(error instanceof Error ? error.message : 'An error occurred')
+          setLoading(false)
+        })
+    }
     if (isLoaded && !isSignedIn) {
       router.push('/sign-in')
-    } else if (isSignedIn && typeof boardId === 'string') {
-      loadBoard(boardId)
-    }
+    } 
   }, [isLoaded, isSignedIn, boardId])
-
-  const loadBoard = async (boardId: string) => {
-    setLoading(true)
-    const data = await fetchBoard(boardId)
-    if (data) {
-      setActiveBoard(data)
-    } else {
-      setError('Failed to load board')
-    }
-    setLoading(false)
-  }
 
   if (!isLoaded || !isSignedIn) {
     return (
@@ -48,7 +50,17 @@ export default function BoardPage() {
     router.push(previousUrl || '/')
   }
 
-  if (error) {
+  // Show loading state first
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  // Only show error if we're not loading and there's an actual error
+  if (!isLoading && error) {
     return (
       <div className="container mx-auto p-4">
         <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
@@ -62,15 +74,8 @@ export default function BoardPage() {
     )
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    )
-  }
-
-  if (!activeBoard) {
+  // Only show this if we're not loading and board is null
+  if (!isLoading && !activeBoard) {
     return (
       <div className="container mx-auto p-4">
         <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
@@ -85,7 +90,18 @@ export default function BoardPage() {
   }
 
   return (
-    <div className="h-full w-auto" style={{ background: activeBoard.color.startsWith('http') ? `url(${activeBoard.color}) center/cover` : activeBoard.color }}>
+    <div className="h-full w-auto" style={{ 
+      backgroundImage: activeBoard?.imageFullUrl 
+        ? `url(${activeBoard.imageFullUrl})`
+        : 'none',
+      backgroundColor: activeBoard?.imageFullUrl 
+        ? 'transparent'
+        : activeBoard?.color,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+      imageRendering: '-webkit-optimize-contrast'
+    }}>
       <BoardInterface />
     </div>
   )

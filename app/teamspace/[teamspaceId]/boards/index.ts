@@ -4,21 +4,29 @@ import { unsplash } from "@/lib/unsplash";
 export interface CreateBoardInput {
   title: string;
   color: string;
-  imageUrl?: string;
+  imageThumbUrl?: string;
+  imageFullUrl?: string;
 }
 
 // Remove the local Board interface and use the imported one
 
 export async function getBoards(teamspaceId: string): Promise<Board[]> {
-  const response = await fetch(`/api/teamspace/boards?teamspaceId=${teamspaceId}`, {
-    cache: 'no-store'
-  });
+  try {
+    const response = await fetch(`/api/teamspace/boards?teamspaceId=${teamspaceId}`, {
+      cache: 'no-store'
+    });
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch boards');
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || 'Failed to fetch boards');
+    }
+
+    return result.data?.boards || [];
+  } catch (error) {
+    console.error('Error fetching boards:', error);
+    return [];
   }
-
-  return response.json();
 }
 
 export async function createBoard(teamspaceId: string, board: CreateBoardInput): Promise<Board> {
@@ -54,8 +62,10 @@ export async function deleteBoard(teamspaceId: string, boardId: string): Promise
     method: 'DELETE',
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    throw new Error('Failed to delete board');
+    throw new Error(data.error || 'Failed to delete board');
   }
 }
 
@@ -66,9 +76,8 @@ export async function fetchImages() {
       collectionIds: ["317099"],
       count: 9,
     });
-    
+
     if (result && result.response) {
-      console.log('Images fetched successfully:', result.response);
       return result.response as Array<Record<string, any>>;
     } else {
       console.error('No response from Unsplash:', result);

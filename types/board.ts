@@ -1,11 +1,13 @@
-import {Column} from './column'
+import { Column } from './column'
+
 export interface Board {
   id: string;
   title: string;
+  teamspaceId: string;
   color: string;
-  imageUrl?: string;
+  imageThumbUrl: string;
+  imageFullUrl: string;
   createdAt: Date;
   updatedAt: Date;
-  teamspaceId: string;
   columns?: Column[];
 }

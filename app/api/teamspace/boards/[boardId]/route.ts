@@ -26,7 +26,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+export async function PUT(
   request: NextRequest,
   context: { params: Promise<{ boardId: string }> }
 ) {
@@ -61,11 +61,24 @@ export async function DELETE(
   }
 
   const { boardId } = await context.params;
+  const searchParams = request.nextUrl.searchParams;
+  const teamspaceId = searchParams.get('teamspaceId');
+
+  if (!teamspaceId) {
+    return NextResponse.json({ error: 'Missing teamspaceId' }, { status: 400 });
+  }
+
   try {
-    await boardService.deleteBoard(boardId);
-    return NextResponse.json({ success: true });
+    const result = await boardService.deleteBoard(boardId);
+    
+    if (!result) {
+      return NextResponse.json({ error: 'Board not found' }, { status: 404 });
+    }
+    
+    return NextResponse.json({ success: true, message: 'Board deleted successfully' });
   } catch (error) {
-    console.error("Error deleting board:", error);
-    return NextResponse.json({ error: 'Failed to delete board' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete board';
+    console.error("Error deleting board:", errorMessage);
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }

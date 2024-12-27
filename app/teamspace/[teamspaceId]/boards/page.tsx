@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { MessageCircleQuestionIcon as QuestionMarkCircle, Pencil, Trash2, Router } from 'lucide-react'
@@ -32,9 +33,13 @@ export default function BoardsPage() {
   const [editingBoard, setEditingBoard] = useState<Board | null>(null)
   const teamspaceId = params?.teamspaceId as string
   const [images, setImages] = useState<Array<Record<string, any>>>([])
-  const [selectedImageUrl, setSelectedImageUrl] = useState<string>("")
+  const [selectedImageUrl, setSelectedImageUrl] = useState<any>({})
   const [isLoadingImages, setIsLoadingImages] = useState(true)
   const [imageError, setImageError] = useState<string | null>(null)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editTitle, setEditTitle] = useState("")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [boardToDelete, setBoardToDelete] = useState<Board | null>(null)
 
   useEffect(() => {
     const loadImages = async () => {
@@ -59,18 +64,25 @@ export default function BoardsPage() {
 
   const fetchBoards = async () => {
     try {
-      setLoading(true)
-      const data = await getBoards(teamspaceId)
-      setBoards(data)
+        setLoading(true);
+        const response = await getBoards(teamspaceId);
+        const data = response;
+        
+        if (error) {
+            throw new Error(error);
+        }
+        
+        setBoards(data);
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to load boards. Please try again.',
-        variant: 'destructive',
-      })
-      setError('Failed to load boards')
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load boards';
+        toast({
+            title: 'Error',
+            description: errorMessage,
+            variant: 'destructive',
+        });
+        setError(errorMessage);
     } finally {
-      setLoading(false)
+        setLoading(false);
     }
   }
 
@@ -78,24 +90,28 @@ export default function BoardsPage() {
     if (!newTitle.trim()) return;
     
     try {
-      setIsProcessing(true)
-      const newBoard = await createBoard(teamspaceId, {
-        title: newTitle,
-        color: selectedImageUrl? selectedImageUrl : generatePastelColor(), // Add the selected image URL
-        imageUrl: selectedImageUrl, // Add the selected image URL
-      })
-      setBoards([...boards, newBoard])
-      setNewTitle("")
-      setSelectedImageUrl("") // Reset selected image
-      toast({ title: 'Success', description: 'Board created successfully.' })
+        setIsProcessing(true);
+        const color = selectedImageUrl?.regular || generatePastelColor();
+        
+        const newBoard = await createBoard(teamspaceId, {
+            title: newTitle,
+            color: selectedImageUrl ? selectedImageUrl.regular : color,
+            imageThumbUrl: selectedImageUrl?.thumb,
+            imageFullUrl: selectedImageUrl?.full,
+        });
+        
+        setBoards([...boards, newBoard]);
+        setNewTitle("");
+        setSelectedImageUrl(null);
+        toast({ title: 'Success', description: 'Board created successfully.' });
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to create board. Please try again.',
-        variant: 'destructive',
-      })
+        toast({
+            title: 'Error',
+            description: 'Failed to create board. Please try again.',
+            variant: 'destructive',
+        });
     } finally {
-      setIsProcessing(false)
+        setIsProcessing(false);
     }
   }
 
@@ -139,77 +155,107 @@ export default function BoardsPage() {
     setPreviousUrl(window.location.pathname)
   }
 
+  const startEditing = (board: Board) => {
+    setEditingBoard(board)
+    setEditTitle(board.title)
+    setEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingBoard || !editTitle.trim()) return
+    
+    try {
+      setIsProcessing(true)
+      await handleUpdateBoard(editingBoard.id, editTitle)
+      setEditDialogOpen(false)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const startDeleting = (board: Board) => {
+    setBoardToDelete(board)
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!boardToDelete) return
+    
+    try {
+      setIsProcessing(true)
+      await handleDeleteBoard(boardToDelete.id)
+      setDeleteDialogOpen(false)
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
   useEffect(() => {
-    if (boards) return
-    if (teamspaceId && !boards) {
+    if (boards.length > 0) {
+      console.log(boards);
+      return
+    }
+    if (teamspaceId) {
       fetchBoards()
     }
-  }, [teamspaceId, boards])
+  }, [teamspaceId]) // Remove boards from dependency array
 
   if (isLoading) {
     return <div className="p-6 text-center">Loading boards...</div>
   }
 
   return (
-    <div className="p-6 max-w-[660px] mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Boards</h1>
-      <div className="grid grid-cols-3 gap-4">
+    <div className="p-4 sm:p-6 mx-auto max-w-[1600px]">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Boards</h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {boards.map((board) => (
-                <Card
-                key={board.id}
-                className="w-[200px] h-[200px] p-4 cursor-pointer hover:shadow-lg transition-shadow flex flex-col items-center justify-center relative"
-                style={{ background: board.color.startsWith('http') ? `url(${board.color}) center/cover` : board.color }}
-                onClick={() => handleNavigate(board.id)}
-                >
-                {board.color.startsWith('http') && (
-                  <div className="absolute inset-0 bg-slate-200 bg-opacity-20"></div>
-                )}
-                {editingBoard?.id === board.id ? (
-                  <Input
-                  value={editingBoard.title}
-                  onChange={(e) => setEditingBoard({ ...editingBoard, title: e.target.value })}
-                  onBlur={() => handleUpdateBoard(board.id, editingBoard.title)}
-                  className="text-lg font-semibold text-center bg-transparent border-none"
-                  autoFocus
-                  />
-                ) : (
-                  <h2 className="text-lg font-semibold text-center text-wrap">{board.title}</h2>
-                )}
-                <div className="absolute top-2 right-2 flex gap-2">
-                  <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setEditingBoard(board)
-                  }}
-                  disabled={isProcessing} // Disable button while processing
-                  >
-                  <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDeleteBoard(board.id)
-                  }}
-                  disabled={isProcessing} // Disable button while processing
-                  >
-                  <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-                </Card>
+          <Card
+            key={board.id}
+            className="w-full aspect-[3/2] p-4 cursor-pointer hover:shadow-lg transition-shadow flex flex-col items-center justify-center relative"
+            style={{ background: board.imageThumbUrl ? `url(${board.imageThumbUrl})` : board.color, backgroundRepeat: 'no-repeat', backgroundSize: 'cover' }}
+            onClick={() => handleNavigate(board.id)}
+          >
+            {board.imageThumbUrl && (
+              <div className="absolute inset-0 bg-neutral-100 bg-opacity-40 rounded-lg"></div>
+            )}
+            <div className="relative z-10">
+              <h2 className="text-lg font-semibold text-center text-wrap">{board.title}</h2>
+            </div>
+            <div className="absolute top-2 right-2 flex gap-2">
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  startEditing(board)
+                }}
+                disabled={isProcessing} // Disable button while processing
+              >
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  startDeleting(board)
+                }}
+                disabled={isProcessing} // Disable button while processing
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </Card>
         ))}
 
         <Dialog>
           <DialogTrigger asChild>
-            <Card className="w-[200px] h-[200px] p-4 cursor-pointer hover:shadow-lg transition-shadow bg-gray-50 flex flex-col items-center justify-center gap-2">
+            <Card className="w-full aspect-[3/2] p-4 cursor-pointer hover:shadow-lg transition-shadow bg-gray-50 flex flex-col items-center justify-center gap-2">
               <h2 className="text-lg font-semibold">Create new</h2>
               <QuestionMarkCircle className="w-6 h-6 text-gray-400" />
             </Card>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="w-[90vw] max-w-3xl mx-4">
             <DialogHeader>
               <DialogTitle className="text-xl">Create New Board</DialogTitle>
             </DialogHeader>
@@ -226,7 +272,7 @@ export default function BoardsPage() {
                 disabled={isProcessing} // Disable input while processing
               />
               
-              <div className="grid grid-cols-3 gap-2 min-h-[200px]">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 min-h-[200px]">
                 {isLoadingImages ? (
                   <div className="col-span-3 flex items-center justify-center">
                     Loading images...
@@ -245,9 +291,9 @@ export default function BoardsPage() {
                       key={image.id}
                       className={`
                         relative aspect-video cursor-pointer overflow-hidden rounded-lg
-                        ${selectedImageUrl === image.urls.regular ? 'ring-2 ring-4 ring-green-200' : ''}
+                        ${selectedImageUrl?.regular === image.urls.regular ? 'ring-4 ring-green-200' : ''}
                       `}
-                      onClick={() => setSelectedImageUrl(image.urls.regular)}
+                      onClick={() => setSelectedImageUrl(image.urls)}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -270,6 +316,69 @@ export default function BoardsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Board</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <Input
+              placeholder="Board title"
+              value={editTitle}
+              onChange={(e) => setEditTitle(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && editTitle.trim()) {
+                  handleSaveEdit()
+                }
+              }}
+              disabled={isProcessing}
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveEdit}
+              disabled={!editTitle.trim() || isProcessing}
+            >
+              {isProcessing ? 'Saving...' : 'Save changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <p>Are you sure you want to delete the board titled "{boardToDelete?.title}"?</p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleConfirmDelete}
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

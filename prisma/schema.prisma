@@ -21,6 +21,8 @@ model Board {
   teamspaceId String
   columns Column[]
   color String
+  imageThumbUrl String @default("")
+  imageFullUrl String @default("")
   
   @@index([teamspaceId])
 }
@@ -31,7 +33,7 @@ model Column {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   boardId String
-  board   Board   @relation(fields: [boardId], references: [id])
+  board   Board   @relation(fields: [boardId], references: [id], onDelete: Cascade)
   position Int
   tasks Task[]
 
@@ -51,7 +53,7 @@ model Task {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   columnId  String?
-  column    Column?  @relation(fields: [columnId], references: [id])
+  column    Column?  @relation(fields: [columnId], references: [id], onDelete: Cascade)
   position  Int?     // Changed from Int to Int?
 
   @@index([userId])
