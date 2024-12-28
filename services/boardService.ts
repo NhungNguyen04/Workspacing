@@ -51,7 +51,18 @@ export async function getBoardById(id: string): Promise<Board | null> {
   const board = await prisma.board.findUnique({
     where: { id },
     include: {
-      columns: true
+      columns: {
+        orderBy: {
+          position: 'asc'
+        },
+        include: {
+          tasks: {
+            orderBy: {
+              position: 'asc'
+            }
+          }
+        },
+      }
     }
   });
 

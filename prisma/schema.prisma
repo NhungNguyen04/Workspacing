@@ -46,19 +46,19 @@ model Task {
   title     String
   dueDate   DateTime?
   reminder  Boolean  @default(false)
-  repeat    String // 'daily', 'weekly', 'monthly'
+  repeat    String? // 'daily', 'weekly', 'monthly'
   status    String   @default("in-progress") // 'in-progress', 'completed', 'cancelled'
-  category  String
-  userId    String   // For authentication
+  category  String?
+  userId    String   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   columnId  String?
   column    Column?  @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  position  Int?     // Changed from Int to Int?
+  position  Int?     
+  description String? @default("")
 
   @@index([userId])
   @@index([columnId])
-  @@unique([columnId, position])
 }
 
 model Content {

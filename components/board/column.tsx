@@ -4,28 +4,29 @@ import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { Plus } from "lucide-react";
 import { Button } from "../ui/button";
 import TaskItem from "./task-item";
+import { ColumnHeader } from "./column-header";
 
 interface ColumnProps {
   column: Column;
-  tasks: Task[];
   index: number;
   onAddTask: (columnId: string) => void;
 }
 
-const ColumnComponent = ({ column, tasks, index, onAddTask }: ColumnProps) => {
+const ColumnComponent = ({ column, index, onAddTask }: ColumnProps) => {
+
+  let tasks = column.tasks as Task[];
+  if (tasks === undefined) {tasks = [];}
+  
   return (
     <Draggable draggableId={column.id} index={index}>
       {(provided) => (
         <div
           {...provided.draggableProps}
           ref={provided.innerRef}
-          className="w-[272px] shrink-0"
+          className="w-[272px] shrink-0 bg-neutral-100 bg-opacity-80 shadow-md rounded-md p-4"
         >
-          <div
-            {...provided.dragHandleProps}
-            className="mb-2 w-full rounded-md bg-neutral-100 p-2 font-medium"
-          >
-            {column.title}
+          <div {...provided.dragHandleProps}>
+            <ColumnHeader data={column} />
           </div>
           <Droppable droppableId={column.id} type="task">
             {(provided) => (

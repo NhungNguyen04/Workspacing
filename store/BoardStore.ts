@@ -24,9 +24,12 @@ interface BoardState {
   addTask: (task: Task) => void
   updateColumnOrder: (columns: Column[]) => void
   updateTaskOrder: (tasks: Task[]) => void
+  moveTask: (taskId: string, sourceColId: string, destColId: string, newIndex: number) => void
+  moveColumn: (columnId: string, newIndex: number) => void
+  persistChanges: () => Promise<void>
 }
 
-export const useBoardStore = create<BoardState>((set) => ({
+export const useBoardStore = create<BoardState>((set, get) => ({
   boards: [],
   activeBoard: null,
   isLoading: false,
@@ -53,4 +56,54 @@ export const useBoardStore = create<BoardState>((set) => ({
   })),
   updateColumnOrder: (columns) => set({ columns }),
   updateTaskOrder: (tasks) => set({ tasks }),
+  moveTask: (taskId: string, sourceColId: string, destColId: string, newIndex: number) => set((state) => {
+    const newColumns = [...state.columns];
+    const sourceCol = newColumns.find(col => col.id === sourceColId);
+    const destCol = newColumns.find(col => col.id === destColId);
+    
+    if (!sourceCol || !destCol) return state;
+
+    const taskToMove = sourceCol.tasks?.find(task => task.id === taskId);
+    if (!taskToMove) return state;
+
+    // Remove from source
+    sourceCol.tasks = sourceCol.tasks?.filter(task => task.id !== taskId);
+    
+    // Add to destination
+    if (!destCol.tasks) destCol.tasks = [];
+    destCol.tasks = [
+      ...(destCol.tasks?.slice(0, newIndex) || []),
+      taskToMove,
+      ...(destCol.tasks?.slice(newIndex) || [])
+    ];
+
+    return { columns: newColumns };
+  }),
+
+  moveColumn: (columnId: string, newIndex: number) => set((state) => {
+    const columns = [...state.columns];
+    const columnIndex = columns.findIndex(col => col.id === columnId);
+    if (columnIndex === -1) return state;
+    
+    const [removed] = columns.splice(columnIndex, 1);
+    columns.splice(newIndex, 0, removed);
+    
+    return { columns };
+  }),
+
+  persistChanges: async () => {
+    const state = get();
+    try {
+      // Implement your API call here
+      await fetch('/api/board/save', {
+        method: 'POST',
+        body: JSON.stringify({
+          boardId: state.activeBoard?.id,
+          columns: state.columns,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to persist changes:', error);
+    }
+  },
 }))

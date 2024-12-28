@@ -3,10 +3,6 @@ import * as columnService from "@/services/columnService";
 import { auth } from "@clerk/nextjs/server";
 
 export async function POST(request: NextRequest) {
-    const boardId = request.nextUrl.searchParams.get('boardId');
-    if (!boardId) {
-        return new NextResponse('Missing boardId', { status: 400 });
-    }
     const { userId } = await auth();
       if (!userId) {
         return new NextResponse('Unauthorized', { status: 401 });
@@ -14,10 +10,10 @@ export async function POST(request: NextRequest) {
     
       const json = await request.json();
       if (Array.isArray(json)) {
-        const columns = await columnService.createColumns(json, boardId);
+        const columns = await columnService.createColumns(json);
         return NextResponse.json(columns);
       } else {
-        const column = await columnService.createColumn(json, boardId);
+        const column = await columnService.createColumn(json);
         return NextResponse.json(column);
       }
     }

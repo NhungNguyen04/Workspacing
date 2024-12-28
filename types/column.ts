@@ -1,3 +1,4 @@
+import { Task } from './task'
 export interface Column {
     id: string
     title: string
@@ -5,5 +6,5 @@ export interface Column {
     createdAt: Date
     updatedAt: Date
     position: number
-    
+    tasks?: Task[]
 }

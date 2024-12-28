@@ -10,7 +10,7 @@ export interface Task {
   createdAt: Date;
   updatedAt: Date;
   columnId: string | null;
-  description?: string;
+  description?: string | null;
   position?: number | null;
 }
 
@@ -22,6 +22,6 @@ export interface TaskInput {
   status: string;
   category?: string;
   columnId?: string | null;
-  description?: string;
+  description?: string | null;
   position?: number | null;
 }

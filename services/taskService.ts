@@ -17,7 +17,8 @@ export async function createTask(data: TaskInput, userId: string) {
       column: columnId ? { connect: { id: columnId } } : undefined,
       columnId: undefined,
       dueDate: restData.dueDate || null,
-      position: position ?? undefined, // Only include position if it has a value
+      position: data.position ?? null, // Only include position if it has a value
+      description: data.description ?? '',
       userId,
     },
   });
