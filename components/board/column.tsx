@@ -12,7 +12,7 @@ interface ColumnProps {
   onAddTask: (columnId: string) => void;
 }
 
-const ColumnComponent = ({ column, index, onAddTask }: ColumnProps) => {
+export default function ColumnComponent({ column, index, onAddTask }: ColumnProps) {
 
   let tasks = column.tasks as Task[];
   if (tasks === undefined) {tasks = [];}
@@ -23,37 +23,35 @@ const ColumnComponent = ({ column, index, onAddTask }: ColumnProps) => {
         <div
           {...provided.draggableProps}
           ref={provided.innerRef}
-          className="w-[272px] shrink-0 bg-neutral-100 bg-opacity-80 shadow-md rounded-md p-4"
+          className="w-[272px] shrink-0 bg-white bg-opacity-90 rounded-md"
         >
-          <div {...provided.dragHandleProps}>
+          <div {...provided.dragHandleProps} className="pt-2 px-2">
             <ColumnHeader data={column} />
-          </div>
-          <Droppable droppableId={column.id} type="task">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="flex flex-col gap-2"
-              >
-                {tasks.map((task, index) => (
-                  <TaskItem key={task.id} task={task} index={index} />
-                ))}
-                {provided.placeholder}
-                <Button
-                  variant="ghost"
-                  className="flex w-full items-center justify-start gap-2"
-                  onClick={() => onAddTask(column.id)}
+            <Droppable droppableId={column.id} type="task">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="flex flex-col gap-2"
                 >
-                  <Plus className="h-4 w-4" />
-                  Add task
-                </Button>
-              </div>
-            )}
-          </Droppable>
+                  {tasks.map((task, index) => (
+                    <TaskItem key={task.id} task={task} index={index} />
+                  ))}
+                  {provided.placeholder}
+                  <Button
+                    variant="ghost"
+                    className="flex w-full items-center justify-start gap-2"
+                    onClick={() => onAddTask(column.id)}
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add task
+                  </Button>
+                </div>
+              )}
+            </Droppable>
+          </div>
         </div>
       )}
     </Draggable>
   );
-};
-
-export default ColumnComponent;
+}

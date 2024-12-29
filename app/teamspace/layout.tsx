@@ -1,5 +1,6 @@
 'use client'
 
+import Footer from "@/components/Footer"
 import * as React from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
@@ -187,6 +188,7 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
           <main className="flex-1 overflow-auto p-6">
             {children}
           </main>
+          <Footer />
         </div>
       </div>
     </SidebarProvider>

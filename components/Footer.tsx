@@ -1,8 +1,8 @@
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaGithub } from 'react-icons/fa'
+import { FaFacebook, FaLinkedin, FaGithub } from 'react-icons/fa'
 
 const Footer = () => {
   return (
-    <footer className="w-full border-t border-gray-200 bg-gray-50">
+    <footer className="w-full bg-white border-t h-[120px] flex items-center justify-center">
         <div className='p-10'>
           <div className="flex justify-center space-x-6 mb-4">
             <a href="https://www.facebook.com/nhungularity/" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-blue-600">

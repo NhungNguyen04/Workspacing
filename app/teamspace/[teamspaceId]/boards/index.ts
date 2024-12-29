@@ -36,11 +36,13 @@ export async function createBoard(teamspaceId: string, board: CreateBoardInput):
     body: JSON.stringify(board),
   });
 
+  const data = await response.json();
+
   if (!response.ok) {
-    throw new Error('Failed to create board');
+    throw new Error(data.error || 'Failed to create board');
   }
 
-  return response.json();
+  return data.data; // Assuming the API returns { data: Board }
 }
 
 export async function updateBoard(teamspaceId: string, boardId: string, title: string): Promise<Board> {

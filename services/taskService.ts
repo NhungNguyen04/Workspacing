@@ -2,25 +2,21 @@ import { prisma } from '@/lib/prisma';
 import { TaskInput, Task } from '@/types/task';
 
 export async function createTask(data: TaskInput, userId: string) {
-  if (data.dueDate && data.dueDate < new Date()) {
-    throw new Error('Due date cannot be in the past');
+  const { columnId, ...restData } = data;
+  
+  if (!columnId) {
+    throw new Error('Column ID is required');
   }
 
-  const columnId = data.columnId || null;
-  const { position, ...restData } = data;
-  
   return prisma.task.create({
     data: {
       ...restData,
+      userId,
+      column: { connect: { id: columnId } },
       repeat: restData.repeat || '',
       category: restData.category || '',
-      column: columnId ? { connect: { id: columnId } } : undefined,
-      columnId: undefined,
-      dueDate: restData.dueDate || null,
-      position: data.position ?? null, // Only include position if it has a value
-      description: data.description ?? '',
-      userId,
-    },
+      position: data.position ?? 0
+    }
   });
 }
 
@@ -51,9 +47,22 @@ export async function createTasks(tasks: TaskInput[], userId: string) {
   return createdTasks;
 }
 
-export async function getTasks(userId: string) {
+export async function getTasks(userId: string, boardId: string) {
   return prisma.task.findMany({
-    where: { userId },
+    where: {
+      userId,
+      column: {
+        boardId
+      }
+    },
+    orderBy: [
+      {
+        columnId: 'asc'
+      },
+      {
+        position: 'asc'
+      }
+    ]
   });
 }
 

@@ -27,10 +27,11 @@ export default function RootLayout({
   return (
     <ClerkProvider dynamic>
       <html lang="en">
-        <body className={inter.className}>
-          {children}
-          <Footer />
-          <ToastContainer /> {/* Add Toaster component */}
+        <body className={`${inter.className} min-h-screen flex flex-col`}>
+          <main className="flex-1">
+            {children}
+          </main>
+          <ToastContainer />
         </body>
       </html>
     </ClerkProvider>

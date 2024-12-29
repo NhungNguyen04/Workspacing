@@ -99,12 +99,17 @@ export default function BoardsPage() {
             imageThumbUrl: selectedImageUrl?.thumb,
             imageFullUrl: selectedImageUrl?.full,
         });
+
+        if (!newBoard || !newBoard.id) {
+            throw new Error('Invalid board data received');
+        }
         
         setBoards([...boards, newBoard]);
         setNewTitle("");
         setSelectedImageUrl(null);
         toast({ title: 'Success', description: 'Board created successfully.' });
     } catch (error) {
+        console.error('Error creating board:', error);
         toast({
             title: 'Error',
             description: 'Failed to create board. Please try again.',

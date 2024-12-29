@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog"
 import { useAuth, useUser, useOrganizationList } from "@clerk/nextjs"
+import Footer from "@/components/Footer"
 
 const personalNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
@@ -171,9 +172,10 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
           </header>
 
           {/* Main Content Area */}
-          <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 p-6">
             {children}
           </main>
+          <Footer />
         </div>
 
         {/* Dialog for Creating an Organization */}

@@ -20,14 +20,20 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const { userId } = await auth();
   if (!userId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
-  const tasks = await getTasks(userId);
+  const { searchParams } = new URL(request.url);
+  const boardId = searchParams.get('boardId');
 
+  if (!boardId) {
+    return new NextResponse('Board ID required', { status: 400 });
+  }
+
+  const tasks = await getTasks(userId, boardId);
   return NextResponse.json(tasks);
 }
 

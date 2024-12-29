@@ -1,18 +1,33 @@
 import { Column } from '@/types/column'
 import { Task } from '@/types/task'
 
-export async function fetchTasks(): Promise<Task[]> {
-  const response = await fetch('/api/tasks')
+export async function fetchTasks(boardId: string): Promise<Task[]> {
+  const response = await fetch(`/api/tasks?boardId=${boardId}`)
   if (!response.ok) throw new Error('Failed to fetch tasks')
   const data = await response.json()
   return Array.isArray(data) ? data : []
 }
 
 export async function updateColumns(columns: Column[]) {
-  return fetch('/api/columns', {
+  const response = await fetch('/api/columns', {
     method: 'PUT',
-    body: JSON.stringify(columns),
-  })
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(
+      columns.map(({ id, position, boardId }) => ({
+        id,
+        position,
+        boardId
+      }))
+    ),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to update columns');
+  }
+  
+  return response.json();
 }
 
 export async function updateTasks(tasks: Task[]) {
@@ -23,15 +38,24 @@ export async function updateTasks(tasks: Task[]) {
 }
 
 export async function createColumn(column: Partial<Column>) {
-  const response = await fetch(`/api/columns`, {
+  const response = await fetch('/api/columns', {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(column),
-  })
-  return response.json()
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create column');
+  }
+
+  const data = await response.json();
+  return data;
 }
 
 export async function createTask(task: Partial<Task>) {
-  const response = await fetch('/api/tasks', {
+  const response = await fetch(`/api/tasks`, {
     method: 'POST',
     body: JSON.stringify(task),
   })

@@ -36,19 +36,29 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
-    const searchParams = request.nextUrl.searchParams;
-    const columnId = searchParams.get('columnId');
-
-    if (!columnId) {
-        return NextResponse.json({ error: 'Missing columnId' }, { status: 400 });
+    const { userId } = await auth();
+    if (!userId) {
+        return new NextResponse('Unauthorized', { status: 401 });
     }
 
     try {
         const data = await request.json();
+        
+        // Handle bulk update
+        if (Array.isArray(data)) {
+            const updatedColumns = await columnService.updateColumns(data);
+            return NextResponse.json(updatedColumns);
+        }
+        
+        // Handle single column update
+        const columnId = request.nextUrl.searchParams.get('columnId');
+        if (!columnId) {
+            return NextResponse.json({ error: 'Missing columnId' }, { status: 400 });
+        }
         const updatedColumn = await columnService.updateColumn(columnId, data);
         return NextResponse.json(updatedColumn);
     } catch (error) {
-        console.error("Error updating column:", error);
-        return NextResponse.json({ error: 'Failed to update column' }, { status: 500 });
+        console.error("Error updating column(s):", error);
+        return NextResponse.json({ error: 'Failed to update column(s)' }, { status: 500 });
     }
 }

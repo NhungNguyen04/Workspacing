@@ -1,5 +1,6 @@
 import { Board } from '@/types/board'
 import { toast } from '@/hooks/use-toast'
+import * as ColumnService from '@/services/columnService'
 
 export async function fetchBoard(boardId: string): Promise<Board | null> {
   try {
@@ -43,5 +44,15 @@ export async function deleteBoard(boardId: string): Promise<boolean> {
     console.error('Error deleting board:', error);
     toast({ title: "Error", description: "Failed to delete board" });
     return false;
+  }
+}
+
+export async function fetchColumns(boardId: string, orgId: string) {
+  try {
+    return ColumnService.fetchColumnsByBoardandOrg(boardId, orgId);
+  } catch (error) {
+    console.error('Error fetching columns:', error);
+    toast({ title: "Error", description: "Failed to fetch columns" });
+    return [];
   }
 }

@@ -26,7 +26,9 @@ interface BoardState {
   updateTaskOrder: (tasks: Task[]) => void
   moveTask: (taskId: string, sourceColId: string, destColId: string, newIndex: number) => void
   moveColumn: (columnId: string, newIndex: number) => void
-  persistChanges: () => Promise<void>
+  optimisticAddColumn: (column: Column) => void
+  updateColumnById: (columnId: string, updatedColumn: Column) => void
+  updateColumn: (columnId: string, updates: Partial<Column>) => void
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -91,19 +93,19 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     return { columns };
   }),
 
-  persistChanges: async () => {
-    const state = get();
-    try {
-      // Implement your API call here
-      await fetch('/api/board/save', {
-        method: 'POST',
-        body: JSON.stringify({
-          boardId: state.activeBoard?.id,
-          columns: state.columns,
-        }),
-      });
-    } catch (error) {
-      console.error('Failed to persist changes:', error);
-    }
-  },
+  optimisticAddColumn: (column) => set((state) => ({
+    columns: [...state.columns, column]
+  })),
+
+  updateColumnById: (columnId, updatedColumn) => set((state) => ({
+    columns: state.columns.map(col => 
+      col.id === columnId ? updatedColumn : col
+    )
+  })),
+
+  updateColumn: (columnId, updates) => set((state) => ({
+    columns: state.columns.map(col => 
+      col.id === columnId ? { ...col, ...updates } : col
+    )
+  })),
 }))
