@@ -6,8 +6,6 @@ import { Plus, X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from '@/components/ui/input'
 import BoardHeader from './board-header'
-import { Board } from '@/types/board'
-import { Column } from '@/types/column'
 import { Task } from '@/types/task'
 import ColumnComponent from './column'
 import { useBoardStore } from '@/store/BoardStore'

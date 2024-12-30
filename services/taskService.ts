@@ -66,21 +66,19 @@ export async function getTasks(userId: string, boardId: string) {
   });
 }
 
-export async function updateTask(data: Task, userId: string) {
+export async function updateTask(taskId: string, data: Partial<Task>) {
   if (data.dueDate && data.dueDate < new Date()) {
     throw new Error('Due date cannot be in the past');
   }
 
-  const columnId = data.columnId || null;
-
   return prisma.task.update({
-    where: { id: data.id },
+    where: { 
+      id: taskId 
+    },
     data: {
       ...data,
-      repeat: data.repeat || '',  // Ensure repeat is never null
+      repeat: data.repeat || '',
       category: data.category || '',
-      column: columnId ? { connect: { id: columnId } } : undefined,
-      columnId: undefined, // Remove columnId from direct assignment
       dueDate: data.dueDate || null,
     },
   });
@@ -113,4 +111,10 @@ export async function updateTasks(tasks: Task[], userId: string) {
     updatedTasks.push(updatedTask);
   }
   return updatedTasks;
+}
+
+export async function deleteTask(taskId: string) {
+  return prisma.task.delete({
+    where: { id: taskId },
+  });
 }

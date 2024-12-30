@@ -29,6 +29,10 @@ interface BoardState {
   optimisticAddColumn: (column: Column) => void
   updateColumnById: (columnId: string, updatedColumn: Column) => void
   updateColumn: (columnId: string, updates: Partial<Column>) => void
+  removeColumn: (columnId: string, restoreColumn?: Column) => void
+  removeTask: (taskId: string) => void
+  restoreTask: (task: Task) => void
+  updateTaskTitle: (taskId: string, newTitle: string) => void
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -107,5 +111,38 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     columns: state.columns.map(col => 
       col.id === columnId ? { ...col, ...updates } : col
     )
+  })),
+
+  removeColumn: (columnId: string, restoreColumn?: Column) => 
+    set((state) => ({
+        columns: restoreColumn 
+            ? [...state.columns, restoreColumn]
+            : state.columns.filter((col) => col.id !== columnId)
+    })),
+
+  removeTask: (taskId: string) => set((state) => ({
+    columns: state.columns.map(col => ({
+      ...col,
+      tasks: col.tasks?.filter(task => task.id !== taskId)
+    }))
+  })),
+
+  restoreTask: (task: Task) => set((state) => ({
+    columns: state.columns.map(col => 
+      col.id === task.columnId
+        ? { ...col, tasks: [...(col.tasks || []), task] }
+        : col
+    )
+  })),
+
+  updateTaskTitle: (taskId: string, newTitle: string) => set((state) => ({
+    columns: state.columns.map(col => ({
+      ...col,
+      tasks: col.tasks?.map(task => 
+        task.id === taskId 
+          ? { ...task, title: newTitle }
+          : task
+      )
+    }))
   })),
 }))

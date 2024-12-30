@@ -62,3 +62,22 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to update column(s)' }, { status: 500 });
     }
 }
+
+export async function DELETE(request: NextRequest) {
+
+    const { userId } = await auth();
+    if (!userId) {
+        return new NextResponse('Unauthorized', { status: 401 });
+    }
+    const columnId = request.nextUrl.searchParams.get('columnId');
+    if (!columnId) {
+        return NextResponse.json({ error: 'Missing columnId' }, { status: 400 });
+    }
+    try {
+        await columnService.deleteColumn(columnId);
+        return NextResponse.json({ message: 'Column deleted' });
+    } catch (error) {
+        console.error("Error deleting column:", error);
+        return NextResponse.json({ error: 'Failed to delete column' }, { status: 500 });
+    }
+}
