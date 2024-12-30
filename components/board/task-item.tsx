@@ -17,7 +17,7 @@ const TaskItem = ({ task, index }: TaskItemProps) => {
           ref={provided.innerRef}
         >
           <CardContent className="p-2">
-            <p>{task.title}</p>
+            <p className="">{task.title}</p>
           </CardContent>
         </Card>
       )}

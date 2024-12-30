@@ -78,7 +78,7 @@ export const ColumnHeader = ({ data }: ColumnHeaderProps) => {
             ) : (
                 <div 
                     onClick={enableEditing}
-                    className="w-full text-sm px-2.5 py-1 h-7 font-medium border-transparent cursor-pointer"
+                    className="w-full text-md px-2.5 py-1 h-7 font-bold border-transparent cursor-pointer"
                 >
                     {title}
                 </div>

@@ -29,6 +29,7 @@ export const BoardInterface: React.FC = () => {
   } = useBoardStore()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isColumnLoading, setIsColumnLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -57,7 +58,7 @@ export const BoardInterface: React.FC = () => {
     }
 
     fetchData()
-  }, [activeBoard?.id, columns.length])
+  }, [activeBoard?.id])
 
   const handleDragEnd = async (result: DropResult) => {
     const { destination, source, draggableId, type } = result;
@@ -151,137 +152,112 @@ export const BoardInterface: React.FC = () => {
     }
   };
 
-  const handleAddColumn = async () => {
-    if (!newColumnTitle || !activeBoard?.id) {
-      toast.error("Column title required")
-      return
+  const handleAddColumn = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
     }
-
-    // Create optimistic column with empty tasks array
-    const optimisticColumn: Column = {
-      id: Date.now().toString(),
-      title: newColumnTitle,
-      position: columns.length,
-      boardId: activeBoard.id,
-      tasks: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
+    
+    if (!newColumnTitle?.trim() || !activeBoard?.id || isColumnLoading) {
+      return;
     }
-
-    // Optimistically update the UI
-    const updatedColumns = [...columns, optimisticColumn];
-    setColumns(updatedColumns);
-    setNewColumnTitle(null);
-    setIsEditing(false);
 
     try {
-      // Create the column on the server
+      setIsColumnLoading(true);
+      
       const createdColumn = await createColumn({
-        title: newColumnTitle,
+        title: newColumnTitle.trim(),
         position: columns.length,
         boardId: activeBoard.id
       });
 
-      // Update the column with the real data while preserving order
-      const finalColumns = updatedColumns.map((col: Column) => 
-        col.id === optimisticColumn.id ? { ...createdColumn, tasks: [] } : col
-      );
-      setColumns(finalColumns);
-
+      setColumns([...columns, { ...createdColumn, tasks: [] }]);
+      setNewColumnTitle("");
+      setIsEditing(false);
+      
     } catch (error) {
-      // Revert on error
-      setColumns(columns);
       toast.error("Failed to create column");
       console.error(error);
+    } finally {
+      setIsColumnLoading(false);
     }
   };
 
-  const handleAddTask = async (columnId: string) => {
+  const handleAddTask = async (columnId: string, title: string) => {
+    if (!title.trim()) return;
+    
     const optimisticTask: Task = {
-      id: Date.now().toString(),
-      title: "New Task",
+      id: `temp-${Date.now()}`,
+      title: title.trim(),
       status: "in-progress",
       reminder: false,
       repeat: "",
       category: "",
       columnId,
       position: tasks.filter(t => t.columnId === columnId).length,
-      userId: '', // Will be set by the server
+      userId: 'null',
       createdAt: new Date(),
       updatedAt: new Date()
     };
-
-    // Add to tasks and update column's tasks
-    const updatedTasks = [...tasks, optimisticTask];
-    setTasks(updatedTasks);
-
-    // Update columns to include the new task
-    const updatedColumns = columns.map(col => {
-      if (col.id === columnId) {
-        return {
-          ...col,
-          tasks: [...(col.tasks || []), optimisticTask]
-        };
-      }
-      return col;
-    });
-    setColumns(updatedColumns);
-
+  
+    // Optimistic update
+    const newTasks = [...tasks, optimisticTask];
+    const newColumns = columns.map(col => 
+      col.id === columnId 
+        ? { ...col, tasks: [...(col.tasks || []), optimisticTask] }
+        : col
+    );
+  
+    setTasks(newTasks);
+    setColumns(newColumns);
+  
     try {
-      const createdTask = await createTask({
-        ...optimisticTask,
-        columnId
-      });
+      const createdTask = await createTask({ ...optimisticTask, columnId });
       
-      // Update with real task data
-      const finalTasks = tasks.map(task => 
+      // Update with real data
+      const updatedTasks = newTasks.map(task => 
         task.id === optimisticTask.id ? createdTask : task
       );
-      setTasks(finalTasks);
-
-      // Update columns with real task data
-      const finalColumns = columns.map(col => {
-        if (col.id === columnId) {
-          return {
-            ...col,
-            tasks: col.tasks?.map(task =>
-              task.id === optimisticTask.id ? createdTask : task
-            )
-          };
-        }
-        return col;
-      });
-      setColumns(finalColumns);
-      
+      const updatedColumns = newColumns.map(col => 
+        col.id === columnId 
+          ? { 
+              ...col, 
+              tasks: col.tasks?.map(task => 
+                task.id === optimisticTask.id ? createdTask : task
+              )
+            }
+          : col
+      );
+  
+      setTasks(updatedTasks);
+      setColumns(updatedColumns);
     } catch (error) {
       // Rollback on error
-      const revertedTasks = tasks.filter(task => task.id !== optimisticTask.id);
-      setTasks(revertedTasks);
-      
-      // Revert columns
-      const revertedColumns = columns.map(col => {
-        if (col.id === columnId) {
-          return {
-            ...col,
-            tasks: col.tasks?.filter(task => task.id !== optimisticTask.id)
-          };
-        }
-        return col;
-      });
-      setColumns(revertedColumns);
-      
+      setTasks(tasks.filter(t => t.id !== optimisticTask.id));
+      setColumns(columns.map(col => 
+        col.id === columnId 
+          ? { 
+              ...col, 
+              tasks: col.tasks?.filter(t => t.id !== optimisticTask.id)
+            }
+          : col
+      ));
       toast.error("Failed to create task");
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleAddColumn();
-    }
-    if (e.key === 'Escape') {
-      setNewColumnTitle(null);
+      e.preventDefault(); // Only prevent default for Enter key
+      if (!isColumnLoading) {
+        handleAddColumn();
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault(); // Only prevent default for Escape key
+      setNewColumnTitle("");
       setIsEditing(false);
     }
+    // Remove e.stopPropagation() to allow normal typing
   };
 
   if (isLoading) {
@@ -316,10 +292,9 @@ export const BoardInterface: React.FC = () => {
                 <div className='flex h-fit w-[272px] items-center justify-center gap-2 bg-white rounded-md mr-10'>
                   {!isEditing ? (
                     <Button
-                      type="button"
+                      onClick={() => setIsEditing(true)}
                       variant="outline"
                       className="w-full h-auto"
-                      onClick={() => {setIsEditing(true)}}
                     >
                       <Plus className="h-4 w-4" />
                       Add Column
@@ -332,26 +307,24 @@ export const BoardInterface: React.FC = () => {
                         value={newColumnTitle || ''}
                         onChange={(e) => setNewColumnTitle(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        type="text"
+                        autoFocus
                       />
                       <div className='float-right mt-2 mb-2 flex flex-row'>
                         <Button 
-                          type="button"
-                          variant='ghost' 
-                          onClick={()=>setIsEditing(false)}
+                          onClick={() => {
+                            setNewColumnTitle("");
+                            setIsEditing(false);
+                          }}
+                          variant='ghost'
                         >
                           <X/>
                         </Button>
                         <Button
-                          type="button"
+                          onClick={handleAddColumn}
                           className='bg-secondary text-primary mr-2'
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleAddColumn();
-                          }}
+                          disabled={isColumnLoading}
                         >
-                          + Add
+                          {isColumnLoading ? 'Adding...' : 'Add'}
                         </Button>
                       </div>
                     </div>
