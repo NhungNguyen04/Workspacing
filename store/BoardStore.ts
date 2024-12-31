@@ -35,6 +35,7 @@ interface BoardState {
   updateTaskTitle: (taskId: string, newTitle: string) => void
   bulkAddColumns: (columns: Column[]) => void
   bulkAddTasks: (tasks: Task[]) => void
+  hydratePreviousUrl: () => void
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -51,7 +52,10 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
   setPreviousUrl(url) {
-    set({ previousUrl: url })
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('previousUrl', url || '');
+    }
+    set({ previousUrl: url });
   },
   clearError: () => set({ error: null }),
   setColumns: (columns) => set({ columns }),
@@ -157,4 +161,11 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     set((state) => ({
       tasks: [...state.tasks, ...newTasks]
     })),
+
+  hydratePreviousUrl: () => {
+    if (typeof window !== 'undefined') {
+      const storedUrl = localStorage.getItem('previousUrl');
+      set({ previousUrl: storedUrl });
+    }
+  },
 }))

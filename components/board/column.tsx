@@ -43,7 +43,7 @@ export default function ColumnComponent({ column, index, onAddTask }: ColumnProp
         <div
           {...provided.draggableProps}
           ref={provided.innerRef}
-          className={`w-[284px] shrink-0 bg-slate-100 bg-opacity-95 rounded-md pb-2 
+          className={`w-[284px] h-fit shrink-0 bg-slate-100 bg-opacity-95 rounded-md pb-2 
             ${snapshot.isDragging ? 'ring-2 ring-primary ring-offset-2 ring-green-300' : ''}`}
         >
           <div {...provided.dragHandleProps} className="pt-2 px-2">

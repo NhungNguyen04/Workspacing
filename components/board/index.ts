@@ -145,6 +145,7 @@ interface BoardData {
 
 export async function generateBoardFromAI(requirement: string) {
   const response = await fetch(`/api/ai?requirement=${encodeURIComponent(requirement)}`);
+  console.log(response);
   
   if (!response.ok) {
     throw new Error('Failed to generate board from AI');

@@ -49,7 +49,8 @@ model Task {
   repeat    String? // 'daily', 'weekly', 'monthly'
   status    String   @default("in-progress") // 'in-progress', 'completed', 'cancelled'
   category  String?
-  userId    String   
+  userId    String?
+  teamspaceId String?   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   columnId  String?
@@ -58,6 +59,7 @@ model Task {
   description String? @default("")
 
   @@index([userId])
+  @@index([teamspaceId])
   @@index([columnId])
 }
 

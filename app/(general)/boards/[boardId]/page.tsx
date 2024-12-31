@@ -24,8 +24,13 @@ export default function BoardPage() {
     activeBoard, 
     setActiveBoard, 
     setColumns,
-    columns 
+    columns,
+    hydratePreviousUrl 
   } = useBoardStore()
+
+  useEffect(() => {
+    hydratePreviousUrl();
+  }, []);
 
   useEffect(() => {
     if (!boardId) return;

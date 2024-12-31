@@ -5,8 +5,8 @@ import { NextResponse } from 'next/server'
 import { createTask, getTasks, updateTask, createTasks, updateTasks, deleteTask } from '@/services/taskService'
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) {
+  const { userId, orgId } = await auth();
+  if (!userId || !orgId) {
     return new NextResponse('Unauthorized', { status: 401 });
   }
 
@@ -15,26 +15,28 @@ export async function POST(request: Request) {
     const tasks = await createTasks(json, userId);
     return NextResponse.json(tasks);
   } else {
-    const task = await createTask(json, userId);
+    // Pass userId only if teamspaceId is not provided
+    const task = await createTask(json, json.columnId ? undefined : userId, json.columnId ? orgId : undefined);
     return NextResponse.json(task);
   }
 }
 
 export async function GET(request: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return new NextResponse('Unauthorized', { status: 401 });
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const boardId = searchParams.get('boardId');
+
+    const tasks = await getTasks(userId, boardId || undefined);
+    return NextResponse.json(tasks || []);
+  } catch (error) {
+    console.error('Error fetching tasks:', error);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
-
-  const { searchParams } = new URL(request.url);
-  const boardId = searchParams.get('boardId');
-
-  if (!boardId) {
-    return new NextResponse('Board ID required', { status: 400 });
-  }
-
-  const tasks = await getTasks(userId, boardId);
-  return NextResponse.json(tasks);
 }
 
 export async function PUT(request: Request) {
@@ -50,7 +52,7 @@ export async function PUT(request: Request) {
   if (!taskId) {
     // Handle bulk update
     if (Array.isArray(json)) {
-      const tasks = await updateTasks(json, userId);
+      const tasks = await updateTasks(json);
       return NextResponse.json(tasks);
     }
     return new NextResponse('Task ID required', { status: 400 });

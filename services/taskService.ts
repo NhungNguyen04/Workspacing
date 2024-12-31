@@ -1,45 +1,46 @@
 import { prisma } from '@/lib/prisma';
-import { TaskInput, Task } from '@/types/task';
+import { Task } from '@/types/task';
 
-export async function createTask(data: TaskInput, userId: string) {
-  const { columnId, ...restData } = data;
-  
-  if (!columnId) {
-    throw new Error('Column ID is required');
+export async function createTask(data: Task, userId?: string, teamspaceId?: string) {
+
+  if (!data.columnId && !data.userId) {
+    throw new Error('Column ID or userId is required');
   }
 
   return prisma.task.create({
     data: {
-      ...restData,
-      userId,
-      column: { connect: { id: columnId } },
-      repeat: restData.repeat || '',
-      category: restData.category || '',
-      position: data.position ?? 0
+      ...data,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      repeat: data.repeat || '',
+      category: data.category || '',
+      position: data.position ?? 0,
+      columnId: data.columnId ?? null,
+      userId: userId || null,
+      teamspaceId: teamspaceId ?? null,
     }
   });
 }
 
-export async function createTasks(tasks: TaskInput[], userId: string) {
+export async function createTasks(tasks: Task[], userId?: string, teamspaceId?: string) {
   const createdTasks = [];
   for (const data of tasks) {
     if (data.dueDate && data.dueDate < new Date()) {
       throw new Error('Due date cannot be in the past');
     }
 
-    const columnId = data.columnId || null;
-    const { position, ...restData } = data;
+    const { columnId, position, ...restData } = data;
 
     const createdTask = await prisma.task.create({
       data: {
         ...restData,
+        ...(teamspaceId ? { teamspaceId } : { userId }),
         repeat: restData.repeat || '',
         category: restData.category || '',
         column: columnId ? { connect: { id: columnId } } : undefined,
         columnId: undefined,
         dueDate: restData.dueDate || null,
-        position: position ?? undefined, // Only include position if it has a value
-        userId,
+        position: position ?? undefined,
       },
     });
     createdTasks.push(createdTask);
@@ -47,21 +48,25 @@ export async function createTasks(tasks: TaskInput[], userId: string) {
   return createdTasks;
 }
 
-export async function getTasks(userId: string, boardId: string) {
+export async function getTasks(userId: string, boardId?: string) {
+  const whereClause: any = {
+    OR: [
+      { userId: userId },
+      { AND: [
+        { teamspaceId: { not: null } }
+      ]}
+    ]
+  };
+  
+  if (boardId) {
+    whereClause.column = { boardId };
+  }
+
   return prisma.task.findMany({
-    where: {
-      userId,
-      column: {
-        boardId
-      }
-    },
+    where: whereClause,
     orderBy: [
-      {
-        columnId: 'asc'
-      },
-      {
-        position: 'asc'
-      }
+      { columnId: 'asc' },
+      { position: 'asc' }
     ]
   });
 }
@@ -84,7 +89,7 @@ export async function updateTask(taskId: string, data: Partial<Task>) {
   });
 }
 
-export async function updateTasks(tasks: Task[], userId: string) {
+export async function updateTasks(tasks: Task[]) {
   const updatedTasks = [];
   for (const data of tasks) {
     if (data.dueDate && data.dueDate < new Date()) {
