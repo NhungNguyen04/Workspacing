@@ -62,19 +62,28 @@ export async function createColumn(column: Partial<Column>) {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to create column');
+    const error = await response.text();
+    throw new Error(`Failed to create column: ${error}`);
   }
 
-  const data = await response.json();
-  return data;
+  return response.json();
 }
 
 export async function createTask(task: Partial<Task>) {
   const response = await fetch(`/api/tasks`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify(task),
-  })
-  return response.json()
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to create task: ${error}`);
+  }
+
+  return response.json();
 }
 
 export async function updateColumnTitle(columnId: string, newTitle: string) {
@@ -123,4 +132,81 @@ export async function updateTaskTitle(taskId: string, newTitle: string) {
     throw new Error('Failed to update task title');
   }
   return response.json();
+}
+
+interface BoardColumn {
+  title: string;
+  tasks: string[];
+}
+
+interface BoardData {
+  columns: BoardColumn[];
+}
+
+export async function generateBoardFromAI(requirement: string) {
+  const response = await fetch(`/api/ai?requirement=${encodeURIComponent(requirement)}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to generate board from AI');
+  }
+  
+  const rawData = await response.json();
+  
+  try {
+    // Extract JSON content from markdown code block if present
+    let jsonString = rawData.data || rawData;
+    if (typeof jsonString === 'string') {
+      // Remove markdown code block syntax if present
+      jsonString = jsonString.replace(/^```json\n|\n```$/g, '');
+    }
+
+    // Parse the JSON string
+    const parsedData = typeof jsonString === 'string' ? JSON.parse(jsonString) : jsonString;
+
+    // Validate the structure
+    if (!parsedData || !Array.isArray(parsedData.columns)) {
+      throw new Error('Invalid board data structure');
+    }
+
+    return parsedData;
+  } catch (error) {
+    console.error('Parsing error:', error);
+    console.error('Raw data:', rawData);
+    throw new Error('Failed to parse AI response');
+  }
+}
+
+export async function applyAIGeneratedBoard(boardId: string, aiData: BoardData) {
+  // Create columns
+  const createdColumns = await Promise.all(
+    aiData.columns.map((columnData, index) =>
+      createColumn({
+        title: columnData.title,
+        boardId: boardId,
+        position: index
+      })
+    )
+  );
+
+  // Create tasks for each column
+  await Promise.all(
+    createdColumns.map((column, colIndex) =>
+      Promise.all(
+        aiData.columns[colIndex].tasks.map((taskTitle, taskIndex) =>
+          createTask({
+            title: taskTitle,
+            columnId: column.id,
+            position: taskIndex,
+            status: "in-progress",
+            reminder: false,
+            repeat: "",
+            category: "",
+            userId: "null"
+          })
+        )
+      )
+    )
+  );
+
+  return { success: true };
 }

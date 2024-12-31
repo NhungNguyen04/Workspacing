@@ -33,6 +33,8 @@ interface BoardState {
   removeTask: (taskId: string) => void
   restoreTask: (task: Task) => void
   updateTaskTitle: (taskId: string, newTitle: string) => void
+  bulkAddColumns: (columns: Column[]) => void
+  bulkAddTasks: (tasks: Task[]) => void
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -145,4 +147,14 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       )
     }))
   })),
+
+  bulkAddColumns: (newColumns: Column[]) => 
+    set((state) => ({
+      columns: [...state.columns, ...newColumns]
+    })),
+    
+  bulkAddTasks: (newTasks: Task[]) =>
+    set((state) => ({
+      tasks: [...state.tasks, ...newTasks]
+    })),
 }))
