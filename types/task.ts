@@ -1,3 +1,4 @@
+import { Column } from './column';
 export interface Task {
   id: string;
   title: string;
@@ -13,5 +14,9 @@ export interface Task {
   columnId?: string | null;
   description?: string | null;
   position?: number | null;
+}
+
+export interface TaskWithColumn extends Task {
+  column: Column;
 }
 

@@ -11,6 +11,7 @@ interface BoardState {
   previousUrl: string | null
   columns: Column[]
   tasks: Task[]
+  tasksByColumn: Record<string, Task[]>
   
   setBoards: (boards: Board[]) => void
   setActiveBoard: (board: Board | null) => void
@@ -36,6 +37,11 @@ interface BoardState {
   bulkAddColumns: (columns: Column[]) => void
   bulkAddTasks: (tasks: Task[]) => void
   hydratePreviousUrl: () => void
+  createTask: (columnId: string, task: Omit<Task, 'id' | 'columnId'>) => Task
+  updateTaskWithColumn: (taskId: string, updates: Partial<Task>, newColumnId?: string) => void
+  getTaskWithColumn: (taskId: string) => { task: Task | null, columnName: string | null }
+  deleteTaskFromColumn: (taskId: string, columnId: string) => void
+  updateTask: (taskId: string, updates: Partial<Task>) => void
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -46,6 +52,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   previousUrl: null,
   columns: [],
   tasks: [],
+  tasksByColumn: {},
   
   setBoards: (boards) => set({ boards }),
   setActiveBoard: (board) => set({ activeBoard: board }),
@@ -168,4 +175,91 @@ export const useBoardStore = create<BoardState>((set, get) => ({
       set({ previousUrl: storedUrl });
     }
   },
-}))
+
+  createTask: (columnId, taskData) => {
+    const newTask: Task = {
+      id: crypto.randomUUID(),
+      columnId,
+      ...taskData
+    };
+
+    set((state) => ({
+      columns: state.columns.map(col => 
+        col.id === columnId
+          ? { ...col, tasks: [...(col.tasks || []), newTask] }
+          : col
+      )
+    }));
+
+    return newTask;
+  },
+
+  updateTaskWithColumn: (taskId, updates, newColumnId) => set((state) => {
+    let updatedColumns = [...state.columns];
+    
+    // Find the task and its current column
+    let currentColumnIndex = -1;
+    let taskIndex = -1;
+    
+    updatedColumns.forEach((col, colIndex) => {
+      const tIndex = col.tasks?.findIndex(t => t.id === taskId) ?? -1;
+      if (tIndex !== -1) {
+        currentColumnIndex = colIndex;
+        taskIndex = tIndex;
+      }
+    });
+
+    if (currentColumnIndex === -1 || taskIndex === -1) return state;
+
+    const currentColumn = updatedColumns[currentColumnIndex];
+    const task = currentColumn.tasks![taskIndex];
+    
+    if (newColumnId && newColumnId !== task.columnId) {
+      // Remove from current column
+      currentColumn.tasks = currentColumn.tasks!.filter(t => t.id !== taskId);
+      
+      // Add to new column
+      const newColumn = updatedColumns.find(col => col.id === newColumnId);
+      if (newColumn) {
+        const updatedTask = { ...task, ...updates, columnId: newColumnId };
+        newColumn.tasks = [...(newColumn.tasks || []), updatedTask];
+      }
+    } else {
+      // Update in current column
+      currentColumn.tasks![taskIndex] = { ...task, ...updates };
+    }
+
+    return { columns: updatedColumns };
+  }),
+
+  getTaskWithColumn: (taskId) => {
+    const state = get();
+    for (const column of state.columns) {
+      const task = column.tasks?.find(t => t.id === taskId);
+      if (task) {
+        return { task, columnName: column.title };
+      }
+    }
+    return { task: null, columnName: null };
+  },
+
+  deleteTaskFromColumn: (taskId, columnId) => set((state) => ({
+    columns: state.columns.map(col => 
+      col.id === columnId
+        ? { ...col, tasks: col.tasks?.filter(task => task.id !== taskId) }
+        : col
+    )
+  })),
+
+  updateTask: (taskId, updates) => set((state) => ({
+    columns: state.columns.map(col => ({
+      ...col,
+      tasks: col.tasks?.map(task => 
+        task.id === taskId 
+          ? { ...task, ...updates }
+          : task
+      )
+    }))
+  })),
+
+}));

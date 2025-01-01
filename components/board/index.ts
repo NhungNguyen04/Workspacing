@@ -134,6 +134,19 @@ export async function updateTaskTitle(taskId: string, newTitle: string) {
   return response.json();
 }
 
+export async function updateTaskDetails(taskId: string, updates: Partial<Task>) {
+  const response = await fetch(`/api/tasks?taskId=${taskId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updates)
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update task details');
+  }
+  return response.json();
+}
+
 interface BoardColumn {
   title: string;
   tasks: string[];
@@ -211,3 +224,4 @@ export async function applyAIGeneratedBoard(boardId: string, aiData: BoardData) 
 
   return { success: true };
 }
+

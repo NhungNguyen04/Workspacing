@@ -49,17 +49,12 @@ export async function createTasks(tasks: Task[], userId?: string, teamspaceId?: 
 }
 
 export async function getTasks(userId: string, boardId?: string) {
-  const whereClause: any = {
-    OR: [
-      { userId: userId },
-      { AND: [
-        { teamspaceId: { not: null } }
-      ]}
-    ]
-  };
+  const whereClause: any = {};
   
   if (boardId) {
     whereClause.column = { boardId };
+  } else if (userId) {
+    whereClause.userId = userId;
   }
 
   return prisma.task.findMany({
