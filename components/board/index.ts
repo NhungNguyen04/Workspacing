@@ -147,6 +147,14 @@ export async function updateTaskDetails(taskId: string, updates: Partial<Task>) 
   return response.json();
 }
 
+export async function fetchTaskLogs(taskId: string) {
+  const response = await fetch(`/api/tasks/log?taskId=${taskId}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch task logs');
+  }
+  return response.json();
+}
+
 interface BoardColumn {
   title: string;
   tasks: string[];

@@ -75,3 +75,30 @@ model Content {
   @@unique([id, userId])
 }
 
+enum ACTION {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum ENTITY_TYPE {
+  BOARD
+  COLUMN
+  TASK
+  CONTENT
+}
+
+model AuditLog {
+  id        String     @id @default(uuid())
+  entityId  String
+  entityType ENTITY_TYPE
+  entityTitle String
+  action    ACTION
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userId    String?
+  userImage String?
+  userName  String?
+
+  @@index([userId])
+}

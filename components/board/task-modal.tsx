@@ -2,15 +2,27 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Calendar } from "../ui/calendar";
 import { Task } from "@/types/task";
 import { Button } from "../ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useBoardStore } from "@/store/BoardStore";
-import { Activity, Calendar as CalendarIcon, Check, Layout, List, Settings, Trash, User, Plus } from "lucide-react";
+import {Activity, Calendar as CalendarIcon, Check, Layout, List, Settings, Trash, User, Plus } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import { format } from "date-fns";
 import { set } from "lodash";
 import { useUser } from "@clerk/nextjs";
-import { updateTaskDetails, deleteTask } from "./index";
+import { updateTaskDetails, deleteTask, fetchTaskLogs } from "./index";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
+
+interface AuditLog {
+  id: string;
+  entityId: string;
+  entityType: string;
+  entityTitle: string;
+  action: string;
+  createdAt: string;
+  userId: string;
+  userImage: string;
+  userName: string;
+}
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -28,10 +40,22 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
   const [showCalendar, setShowCalendar] = useState(false);
   const [description, setDescription] = useState(task.description || "");
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
 
   const { columnName } = getTaskWithColumn(task.id);
 
   const [isPersonalTask, setIsPersonalTask] = useState(Boolean(task.userId));
+
+  useEffect(() => {
+    if (isOpen && task.id) {
+      setIsLoadingLogs(true);
+      fetchTaskLogs(task.id)
+        .then(setLogs)
+        .catch(console.error)
+        .finally(() => setIsLoadingLogs(false));
+    }
+  }, [isOpen, task.id]);
 
   const handleSave = async () => {
     try {
@@ -174,6 +198,46 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                               </Button>
                           </div>
                       </div>
+                  </div>
+              </div>
+                                  
+              {/* Activity Section */}
+              <div className="space-y-2">
+                <div className="grid grid-cols-[24px_1fr] gap-3 items-center">
+                    <Activity />
+                    <p className="text-lg font-bold">Activity</p>
+                  </div>
+                  <div className="grid grid-cols-[24px_1fr] gap-3">
+                    <div />
+                    <div className="space-y-4">
+                      {isLoadingLogs ? (
+                        <p className="text-sm text-muted-foreground">Loading activity...</p>
+                      ) : logs.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No activity yet</p>
+                      ) : (
+                        logs.map((log) => (
+                          <div key={log.id} className="flex items-start space-x-3">
+                            {log.userImage && (
+                              <img
+                                src={log.userImage}
+                                alt={log.userName}
+                                className="w-6 h-6 rounded-full"
+                              />
+                            )}
+                            <div className="flex-1">
+                              <p className="text-sm">
+                                <span className="font-medium">{log.userName}</span>{" "}
+                                {log.action.toLowerCase()}d{" "}
+                                <span className="font-medium">"{log.entityTitle}"</span>
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(log.createdAt), "MMM d, yyyy 'at' h:mm a")}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
               </div>
           </div>
