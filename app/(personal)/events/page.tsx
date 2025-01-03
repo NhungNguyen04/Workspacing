@@ -5,7 +5,7 @@ import { CalendarEventType } from "@/store/EventStore";
 import { useAuth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getEvents } from "@/services/eventService";
+import { getPersonalEvents } from ".";
 import dayjs from "dayjs";
 
 export default function EventPage() {
@@ -16,7 +16,7 @@ export default function EventPage() {
       if (!userId) {
         redirect("/sign-in");
       } else {
-        const events = await getEvents(userId);
+        const events = await getPersonalEvents();
         const formattedEvents = events.map(event => ({
           ...event,
           date: dayjs(event.date),

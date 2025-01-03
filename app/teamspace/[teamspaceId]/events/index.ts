@@ -1,7 +1,6 @@
-
-async function getEvents() {
+export async function getPersonalEvents(): Promise<any[]> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/events`, {
+    const response = await fetch(`api/events`, {
       cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',
