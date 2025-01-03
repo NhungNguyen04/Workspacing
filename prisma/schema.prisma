@@ -102,3 +102,15 @@ model AuditLog {
 
   @@index([userId])
 }
+
+model Event {
+  id        String   @id @default(cuid())
+  title     String
+  date      DateTime
+  description String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+
+  @@index([userId])
+}

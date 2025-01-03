@@ -22,7 +22,8 @@ const TaskItem = ({ task, index }: TaskItemProps) => {
             {...provided.dragHandleProps}
             ref={provided.innerRef}
             onClick={() => setShowModal(true)}
-            className="cursor-pointer"
+            className="cursor-pointer hover:ring-2 hover:ring-green-300 hover:ring-offset-2 
+              active:ring-2 active:ring-primary active:ring-offset-2"
           >
             <CardContent className="p-2">
               <p className="text-sm">{task.title}</p>
