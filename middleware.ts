@@ -4,9 +4,20 @@ import { NextResponse } from 'next/server'
 const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)'])
 
 export default clerkMiddleware(async (auth, request) => {
+  // Only block API routes accessed directly from browser
+  if (request.nextUrl.pathname.startsWith('/api')) {
+    const referer = request.headers.get('referer');
+    const isDirectAccess = !referer || !referer.includes(request.headers.get('host') || '');
+    
+    if (isDirectAccess) {
+      return NextResponse.json({ error: 'Direct API access not allowed' }, { status: 403 });
+    }
+  }
+
   if (!isPublicRoute(request)) {
     await auth.protect()
   }
+
   (auth:any, req: any) => {
     if (auth.userId && auth.isPublicRoute) {
       let path = "/select-org"
@@ -27,15 +38,12 @@ export default clerkMiddleware(async (auth, request) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
+    '/api/:path*',  // Explicitly match all API routes
   ],
   publicRoutes: [
     "/",
     "/sign-in",
     "/sign-up",
-    // Add any other marketing routes that should be public
   ],
 }
