@@ -52,7 +52,6 @@ export default function TinyMCEEditor({ value, onChange }: TinyMCEEditorProps) {
           'table',
           'visualblocks',
           'wordcount',
-          'editimage',
         ],
         toolbar:
           'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | checklist numlist bullist indent outdent | link image media table | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | emoticons charmap | removeformat',
