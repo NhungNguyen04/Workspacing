@@ -41,7 +41,7 @@ export default function ContentEditorPage() {
         ...data,
         createdAt: new Date(data.createdAt),
         updatedAt: new Date(data.updatedAt),
-        categories: data.categories || [] // Ensure categories is included with a default empty array
+        categories: data.categories || [] 
       })
     } catch (error) {
       console.error('Error fetching content:', error)

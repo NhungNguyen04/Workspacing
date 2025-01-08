@@ -1,4 +1,5 @@
-import { Content } from "@prisma/client";
+import { Content } from "@/types/content"
+
 export async function getContent(contentId: string): Promise<Content> {
   const response = await fetch(`/api/contents/${contentId}`, {
     cache: 'no-store'

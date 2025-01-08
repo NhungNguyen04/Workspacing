@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = getAuth(request);
@@ -15,7 +15,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = context.params;
+    const { id } = await context.params;
     if (!id) {
       return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
     }
@@ -30,7 +30,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = getAuth(request);
@@ -38,7 +38,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: categoryId } = context.params;
+    const { id: categoryId } = await context.params;
     const { contentId } = await request.json();
 
     if (!categoryId || !contentId) {
@@ -55,7 +55,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = getAuth(request);
@@ -63,7 +63,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: categoryId } = context.params;
+    const { id: categoryId } = await context.params;
 
     if (!categoryId) {
       return NextResponse.json({ error: 'Category ID and Content ID are required' }, { status: 400 });
