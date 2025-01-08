@@ -1,3 +1,5 @@
+import { Category } from './category'
+
 export interface Content {
   id: string
   title: string
@@ -5,4 +7,13 @@ export interface Content {
   createdAt: Date
   updatedAt: Date
   userId: string
+  categories: ContentCategory[]
+}
+
+export interface ContentCategory {
+  content: Content
+  contentId: string
+  category: Category
+  categoryId: string
+  assignedAt: Date
 }

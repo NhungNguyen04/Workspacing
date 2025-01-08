@@ -69,10 +69,36 @@ model Content {
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId String
+  userId    String
+  categories ContentCategory[]
 
   @@index([userId])
   @@unique([id, userId])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  color     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  contents  ContentCategory[]
+
+  @@index([userId])
+  @@unique([name, userId])
+}
+
+model ContentCategory {
+  content     Content   @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentId   String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId  String
+  assignedAt  DateTime  @default(now())
+
+  @@id([contentId, categoryId])
+  @@index([contentId])
+  @@index([categoryId])
 }
 
 enum ACTION {

@@ -36,11 +36,12 @@ export default function ContentEditorPage() {
     setLoading(true)
     try {
       const data = await getContent(id)
-      // Convert string dates to Date objects
+      // Convert string dates to Date objects and ensure categories is included
       setActiveContent({
         ...data,
         createdAt: new Date(data.createdAt),
-        updatedAt: new Date(data.updatedAt)
+        updatedAt: new Date(data.updatedAt),
+        categories: data.categories || [] // Ensure categories is included with a default empty array
       })
     } catch (error) {
       console.error('Error fetching content:', error)
