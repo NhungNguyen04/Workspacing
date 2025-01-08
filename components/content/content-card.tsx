@@ -21,9 +21,10 @@ interface ContentCardProps {
   onUpdate: (updatedContent: Content) => void
   onDelete: (id: string) => void
   setPreviousUrl: (url: string) => void
+  onClick?: () => void;
 }
 
-export function ContentCard({ content, onUpdate, onDelete, setPreviousUrl }: ContentCardProps) {
+export function ContentCard({ content, onUpdate, onDelete, setPreviousUrl, onClick }: ContentCardProps) {
   const { categories } = useContentStore()
   const [isEditing, setIsEditing] = useState(false)
   const [editingTitle, setEditingTitle] = useState(content.title)
@@ -74,12 +75,10 @@ export function ContentCard({ content, onUpdate, onDelete, setPreviousUrl }: Con
   }
 
   return (
-    <>
-      <Link
-        href={`/contents/${content.id}`}
-        className="group relative bg-white border border-gray-200 rounded-lg px-6 py-4 hover:shadow-lg transition-all duration-200"
-        onClick={() => setPreviousUrl(window.location.pathname)}
-      >
+    <div 
+      className="cursor-pointer group relative bg-white border border-gray-200 rounded-lg px-6 py-4 hover:shadow-lg transition-all duration-200" 
+      onClick={onClick}
+    >
         <div className="space-y-2">
           <p className="font-semibold text-md line-clamp-2">{content.title}</p>
           <div className="flex flex-wrap gap-1">
@@ -124,7 +123,6 @@ export function ContentCard({ content, onUpdate, onDelete, setPreviousUrl }: Con
             </Button>
           </div>
         </div>
-      </Link>
 
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
         <DialogContent className="sm:max-w-md">
@@ -158,6 +156,6 @@ export function ContentCard({ content, onUpdate, onDelete, setPreviousUrl }: Con
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }

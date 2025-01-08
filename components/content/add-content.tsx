@@ -23,8 +23,6 @@ export function AddContent() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [isCreating, setIsCreating] = useState(false)
 
-  console.log('Categories from store:', categories) // Add this debug line
-
   const handleCreateContent = async () => {
     if (!newContentTitle.trim()) return
     setIsCreating(true)

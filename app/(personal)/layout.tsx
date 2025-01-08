@@ -39,11 +39,12 @@ import {
 import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog"
 import { useAuth, useUser, useOrganizationList } from "@clerk/nextjs"
 import Footer from "@/components/Footer"
+import { getContents } from '@/components/content'
+import { useContentStore } from '@/store/ContentStore'
 
 const personalNav = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: ListTodo, label: "Tasks", href: "/tasks" },
-  { icon: Calendar, label: "Events", href: "/events" },
   { icon: FileText, label: "Contents", href: "/contents" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
@@ -59,8 +60,30 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   const [showDialog, setShowDialog] = React.useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const { contents, setContents, isLoading, setLoading } = useContentStore()
 
-  if (!isLoaded || !userId) {
+  const displayContents = contents.slice(0, 5)
+
+  // Add useEffect for controlled API calls
+  React.useEffect(() => {
+    const fetchData = async () => {
+      if (!isLoaded || !userId || contents.length > 0) return;
+      
+      setLoading(true);
+      try {
+        const data = await getContents();
+        setContents(data);
+      } catch (error) {
+        console.error('Failed to fetch contents:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isLoaded, userId, contents.length, setContents, setLoading]);
+
+  if (!isLoaded || !userId || isLoading) {
     return <div>Loading...</div>
   }
 
@@ -80,6 +103,10 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   const handleCreateOrganizationRedirect = () => {
     router.push("/select-org")
     setShowDialog(false)
+  }
+
+  const handleContentClick = (id: string) => {
+    router.push(`/contents/${id}`)
   }
 
   return (
@@ -103,7 +130,9 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
                 <SidebarMenu>
                   {personalNav.map((item) => (
                     <SidebarMenuItem key={item.label}>
-                      <SidebarMenuButton asChild>
+                      <SidebarMenuButton
+                        asChild
+                      >
                         <Link
                           href={item.href}
                           className={`flex items-center space-x-2 ${
@@ -116,6 +145,26 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
+                      {item.label === "Contents" && openSidebar && (
+                        <div className="ml-6 mt-2 space-y-1">
+                          {displayContents.map((content) => (
+                            <div
+                              key={content.id}
+                              className="cursor-pointer text-sm text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-accent"
+                              onClick={() => handleContentClick(content.id)}
+                            >
+                              {content.title.length > 25
+                                ? `${content.title.substring(0, 25)}...`
+                                : content.title}
+                            </div>
+                          ))}
+                          {contents.length > 5 && (
+                            <div className="text-sm text-muted-foreground px-2 py-1.5">
+                              ...and {contents.length - 5} more
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>

@@ -40,6 +40,10 @@ import {
 import { useAuth, useOrganization, useUser } from "@clerk/nextjs"
 import { OrganizationSwitcher } from "@clerk/nextjs"
 import {startCase} from "lodash";
+import { useBoardStore } from "@/store/BoardStore"
+import { getBoards } from "."
+import { toast } from "react-toastify"
+import 'react-toastify/dist/ReactToastify.css' 
 
 function useMetaData(organization: any) {
   React.useEffect(() => {
@@ -55,6 +59,28 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
   const [openSidebar, setOpenSidebar] = React.useState(true)
   const pathname = usePathname()
   const router = useRouter()
+  const {boards, setBoards, isLoading, setLoading, error, setError  } = useBoardStore();
+  const displayBoards = boards.slice(0, 5)
+
+  const fetchBoards = async (teamspaceId: string) => {
+    try {
+        setLoading(true);
+        const response = await getBoards(teamspaceId);
+        const data = response;
+        
+        if (error) {
+            throw new Error(error);
+        }
+        
+        setBoards(data);
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load boards';
+        toast.error(errorMessage);
+        setError(errorMessage);
+    } finally {
+        setLoading(false);
+    }
+  }
 
   React.useEffect(() => {
     // Redirect only if the user is not already on a valid organization route
@@ -64,6 +90,7 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
       if (currentPath !== organizationPath) {
         router.push(organizationPath);
       }
+      fetchBoards(organization.id);
     }
   }, [organization, pathname, router]);
   
@@ -76,10 +103,13 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
     setOpenSidebar(!openSidebar)
   }
 
+  const handleBoardClick = (id: string) => {
+    router.push(`/boards/${id}`)
+  }
+
   const teamNav = [
     { icon: LayoutDashboard, label: "Dashboard", href: `/teamspace/${organization?.id}` },
     { icon: LayoutPanelLeft, label: "Boards", href: `/teamspace/${organization?.id}/boards` },
-    { icon: Calendar, label: "Events", href: `/teamspace/${organization?.id}/events` },
     { icon: FileText, label: "Contents", href: `/teamspace/${organization?.id}/contents` },
     { icon: Users, label: "Members", href: `/teamspace/${organization?.id}/members` },
     { icon: Settings, label: "Settings", href: `/teamspace/${organization?.id}/settings` },
@@ -118,6 +148,26 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
                           <span>{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
+                      {item.label === "Boards" && openSidebar && (
+                        <div className="ml-6 mt-2 space-y-1">
+                          {displayBoards.map((board) => (
+                            <div
+                              key={board.id}
+                              className="cursor-pointer text-sm text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-accent"
+                              onClick={() => handleBoardClick(board.id)}
+                            >
+                              {board.title.length > 25
+                                ? `${board.title.substring(0, 25)}...`
+                                : board.title}
+                            </div>
+                          ))}
+                          {boards.length > 5 && (
+                            <div className="text-sm text-muted-foreground px-2 py-1.5">
+                              ...and {boards.length - 5} more
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>

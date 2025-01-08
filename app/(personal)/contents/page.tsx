@@ -33,16 +33,23 @@ export default function ContentPage() {
     setCategories,
     isLoading, 
     setLoading,
-    setPreviousUrl  // Add this to destructuring
+    setPreviousUrl
   } = useContentStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const { user, isLoaded, isSignedIn } = useUser()
   const [isManageMode, setIsManageMode] = useState(false)
+  const router = useRouter()
+
+  const handleContentClick = (id: string) => {
+    setPreviousUrl(window.location.pathname)
+    router.push(`/contents/${id}`)
+  }
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!isLoaded || !isSignedIn) return;
+      if (!isLoaded || !isSignedIn || (contents.length > 0 && categories.length > 0)) return;
+      
       setLoading(true);
       try {
         const [categoriesData, contentsData] = await Promise.all([
@@ -59,7 +66,7 @@ export default function ContentPage() {
     };
 
     fetchData();
-  }, [isLoaded, isSignedIn, setContents, setCategories, setLoading]);
+  }, [isLoaded, isSignedIn, contents.length, categories.length, setContents, setCategories, setLoading]);
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategories(prev => {
@@ -189,6 +196,7 @@ export default function ContentPage() {
                 setContents(contents.filter(c => c.id !== id))
               }}
               setPreviousUrl={setPreviousUrl}
+              onClick={() => handleContentClick(content.id)}
             />
           ))}
         </div>

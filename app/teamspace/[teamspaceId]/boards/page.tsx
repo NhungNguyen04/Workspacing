@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { MessageCircleQuestionIcon as QuestionMarkCircle, Pencil, Trash2, Router } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
-import { getBoards, createBoard, updateBoard, deleteBoard, fetchImages } from '.'
+import { toast } from "react-toastify"
+import 'react-toastify/dist/ReactToastify.css' 
+import { getBoards, createBoard, updateBoard, deleteBoard, fetchImages } from '../..'
 import { Board } from '@/types/board'
 import { useBoardStore } from '@/store/BoardStore'
 
@@ -75,11 +76,7 @@ export default function BoardsPage() {
         setBoards(data);
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Failed to load boards';
-        toast({
-            title: 'Error',
-            description: errorMessage,
-            variant: 'destructive',
-        });
+        toast.error(errorMessage);
         setError(errorMessage);
     } finally {
         setLoading(false);
@@ -107,14 +104,10 @@ export default function BoardsPage() {
         setBoards([...boards, newBoard]);
         setNewTitle("");
         setSelectedImageUrl(null);
-        toast({ title: 'Success', description: 'Board created successfully.' });
+        toast.success('Board created successfully.');
     } catch (error) {
         console.error('Error creating board:', error);
-        toast({
-            title: 'Error',
-            description: 'Failed to create board. Please try again.',
-            variant: 'destructive',
-        });
+        toast.error('Failed to create board. Please try again.');
     } finally {
         setIsProcessing(false);
     }
@@ -126,13 +119,9 @@ export default function BoardsPage() {
       const updatedBoard = await updateBoard(teamspaceId, id, updatedTitle)
       setBoards(boards.map(board => board.id === id ? updatedBoard : board))
       setEditingBoard(null)
-      toast({ title: 'Success', description: 'Board updated successfully.' })
+      toast.success('Board updated successfully.')
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update board. Please try again.',
-        variant: 'destructive',
-      })
+      toast.error('Failed to update board. Please try again.')
     } finally {
       setIsProcessing(false)
     }
@@ -143,13 +132,9 @@ export default function BoardsPage() {
       setIsProcessing(true)
       await deleteBoard(teamspaceId, id)
       setBoards(boards.filter(board => board.id !== id))
-      toast({ title: 'Success', description: 'Board deleted successfully.' })
+      toast.success('Board deleted successfully.')
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete board. Please try again.',
-        variant: 'destructive',
-      })
+      toast.error('Failed to delete board. Please try again.')
     } finally {
       setIsProcessing(false)
     }
