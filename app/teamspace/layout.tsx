@@ -108,10 +108,8 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
   }
 
   const teamNav = [
-    { icon: LayoutDashboard, label: "Dashboard", href: `/teamspace/${organization?.id}` },
-    { icon: LayoutPanelLeft, label: "Boards", href: `/teamspace/${organization?.id}/boards` },
+    { icon: LayoutPanelLeft, label: "Boards", href: `/teamspace/${organization?.id}` },
     { icon: FileText, label: "Contents", href: `/teamspace/${organization?.id}/contents` },
-    { icon: Users, label: "Members", href: `/teamspace/${organization?.id}/members` },
     { icon: Settings, label: "Settings", href: `/teamspace/${organization?.id}/settings` },
   ]
 
@@ -149,7 +147,7 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
                         </Link>
                       </SidebarMenuButton>
                       {item.label === "Boards" && openSidebar && (
-                        <div className="ml-6 mt-2 space-y-1">
+                        <div className="ml-6 space-y-1 pt-1">
                           {displayBoards.map((board) => (
                             <div
                               key={board.id}
@@ -162,7 +160,7 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
                             </div>
                           ))}
                           {boards.length > 5 && (
-                            <div className="text-sm text-muted-foreground px-2 py-1.5">
+                            <div className="text-sm text-muted-foreground px-2 py-1">
                               ...and {boards.length - 5} more
                             </div>
                           )}

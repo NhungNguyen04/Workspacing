@@ -43,8 +43,7 @@ import { getContents } from '@/components/content'
 import { useContentStore } from '@/store/ContentStore'
 
 const personalNav = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
-  { icon: ListTodo, label: "Tasks", href: "/tasks" },
+  { icon: ListTodo, label: "Tasks", href: "/" },
   { icon: FileText, label: "Contents", href: "/contents" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ]
@@ -81,7 +80,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
     };
 
     fetchData();
-  }, [isLoaded, userId, contents.length, setContents, setLoading]);
+  }, [isLoaded, userId]);
 
   if (!isLoaded || !userId || isLoading) {
     return <div>Loading...</div>
@@ -146,7 +145,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
                         </Link>
                       </SidebarMenuButton>
                       {item.label === "Contents" && openSidebar && (
-                        <div className="ml-6 mt-2 space-y-1">
+                        <div className="ml-6 pt-1 space-y-1">
                           {displayContents.map((content) => (
                             <div
                               key={content.id}

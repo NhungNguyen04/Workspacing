@@ -19,7 +19,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { toast } from 'react-toastify'
-import { getContents, getCategories, createContent, deleteCategory } from '@/components/content/index'
+import { getContents, getCategories, deleteCategory } from '@/components/content/index'
 import { useContentStore } from '@/store/ContentStore'
 import { AddCategory } from '@/components/content/add-category'
 import { ContentCard } from '@/components/content/content-card'

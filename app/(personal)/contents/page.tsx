@@ -11,13 +11,6 @@ import {
   Loader2,
   X
 } from 'lucide-react'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
 import { toast } from 'react-toastify'
 import { getContents, getCategories, createContent, deleteCategory } from '@/components/content/index'
 import { useContentStore } from '@/store/ContentStore'
@@ -66,7 +59,7 @@ export default function ContentPage() {
     };
 
     fetchData();
-  }, [isLoaded, isSignedIn, contents.length, categories.length, setContents, setCategories, setLoading]);
+  }, [isLoaded, isSignedIn, contents.length, categories.length]);
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategories(prev => {
