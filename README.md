@@ -2,7 +2,7 @@
 
 **Demo Link:** [WorkSpacing Demo](https://workspacing.vercel.app)
 
-![WorkSpacing Preview](./public/screenshot.png)
+![WorkSpacing Preview](./public/screenshot`.png)
 
 ---
 
