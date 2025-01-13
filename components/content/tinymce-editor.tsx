@@ -79,14 +79,14 @@ export default function TinyMCEEditor({ value, onChange }: TinyMCEEditorProps) {
             font-family: Helvetica, Arial, sans-serif;
             font-size: 14px;
             width: 90%; /* Full width */
-            height: 90%; /* Full height */
-            min-height: 800px; /* Minimum height of the content */
+            height: 100%; /* Full height */
+            min-height: 1000px; /* Minimum height of the content */
             padding: 20px; /* Padding within the content */
             margin: auto; /* Center the content if smaller than max width */
             box-sizing: border-box; /* Include padding in height calculation */
           }
         `,
-        min_height: 700, // Set the editor’s total height
+        min_height: 1000, // Set the editor’s total height
         max_width: 1000, // Set the editor’s total width
         setup: (editor) => {
           // Listen for keydown events and override Delete key behavior
