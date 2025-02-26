@@ -5,7 +5,6 @@ import { siteConfig } from '@/config/site'
 import { Metadata } from 'next'
 import {ToastContainer } from 'react-toastify' // Import Toaster component
 import 'react-toastify/dist/ReactToastify.css' // Add this line to import styles
-import Footer from '@/components/Footer'  // Add this import
 
 const inter = Inter({ subsets: ['latin'] })
 

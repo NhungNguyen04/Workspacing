@@ -1,9 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)'])
+const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/welcome(.*)'])
 
-export default clerkMiddleware(async (auth, request) => {
+export default clerkMiddleware(async (auth: any, request: any) => {
   // Only block API routes accessed directly from browser
   if (request.nextUrl.pathname.startsWith('/api')) {
     const referer = request.headers.get('referer');
@@ -45,5 +45,6 @@ export const config = {
     "/",
     "/sign-in",
     "/sign-up",
+    "/welcome"
   ],
 }
