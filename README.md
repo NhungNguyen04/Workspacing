@@ -1,4 +1,10 @@
 # <img src="./public/logo.png" width="40" height="40" alt="WorkSpacing Icon" /> WorkSpacing – Private & Teamspace Management
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Clerk](https://img.shields.io/badge/Clerk-3B82F6?style=for-the-badge&logo=clerk&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
+![Zustand](https://img.shields.io/badge/Zustand-7857FF?style=for-the-badge&logo=zustand&logoColor=white)
+
 
 **Demo Link:** [WorkSpacing Demo](https://workspacing.vercel.app)
 
