@@ -10,11 +10,12 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { createCategory } from './index';
+import { createCategory, createTeamspaceCategory } from './index';
 import { toast } from 'react-toastify';
 import { Category } from '@/types/category';
 import './color-picker.css';
 import { useContentStore } from '@/store/ContentStore';
+import { useParams } from 'next/navigation';
 
 interface AddCategoryProps {
     onCategoryAdded: (category: Category) => void;
@@ -26,6 +27,8 @@ export function AddCategory({ onCategoryAdded }: AddCategoryProps) {
     const [isCreatingCategory, setIsCreatingCategory] = useState(false);
     const [showColorPicker, setShowColorPicker] = useState(false);
     const {categories, setCategories} = useContentStore();
+    const param = useParams();
+    const teamspaceId = param.teamspaceId as string;
 
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
@@ -43,7 +46,9 @@ export function AddCategory({ onCategoryAdded }: AddCategoryProps) {
         if (!newCategoryName.trim()) return;
         setIsCreatingCategory(true);
         try {
-            const newCategory = await createCategory(newCategoryName, newCategoryColor);
+            let newCategory;
+            if (teamspaceId) newCategory = await createTeamspaceCategory(newCategoryName, newCategoryColor, teamspaceId);
+            else newCategory = await createCategory(newCategoryName, newCategoryColor);
             onCategoryAdded(newCategory);
             setNewCategoryName('');
             setNewCategoryColor('#000000');

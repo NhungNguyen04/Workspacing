@@ -1,4 +1,5 @@
 import { Column } from './column';
+import { Content } from './content';
 export interface Task {
   id: string;
   title: string;

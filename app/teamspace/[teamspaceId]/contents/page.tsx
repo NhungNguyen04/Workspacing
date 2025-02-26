@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,13 +19,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { toast } from 'react-toastify'
-import { getContents, getCategories, deleteCategory } from '@/components/content/index'
+import { getContents, getCategories, deleteCategory, getTeamspaceCategories, getTeamspaceContents } from '@/components/content/index'
 import { useContentStore } from '@/store/ContentStore'
 import { AddCategory } from '@/components/content/add-category'
 import { ContentCard } from '@/components/content/content-card'
 import { AddContent } from '@/components/content/add-content'
 
 export default function ContentPage() {
+  const router = useRouter()
   const { 
     contents, 
     setContents, 
@@ -39,6 +40,8 @@ export default function ContentPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const { user, isLoaded, isSignedIn } = useUser()
   const [isManageMode, setIsManageMode] = useState(false)
+  const param = useParams();
+  const teamspaceId = param.teamspaceId as string;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,9 +49,10 @@ export default function ContentPage() {
       setLoading(true);
       try {
         const [categoriesData, contentsData] = await Promise.all([
-          getCategories(),
-          getContents()
+          getTeamspaceCategories(teamspaceId),
+          getTeamspaceContents(teamspaceId)
         ]);
+        console.log(contentsData);
         setCategories(categoriesData);
         setContents(contentsData);
       } catch (error) {
@@ -57,6 +61,9 @@ export default function ContentPage() {
         setLoading(false);
       }
     };
+
+    console.log(contents)
+    console.log(categories)
 
     fetchData();
   }, [isLoaded, isSignedIn, setContents, setCategories, setLoading]);
@@ -68,6 +75,11 @@ export default function ContentPage() {
       }
       return [...prev, categoryId]
     })
+  }
+
+  const handleContentClick = (id: string) => {
+    setPreviousUrl(window.location.pathname)
+    router.push(`/contents/${id}`)
   }
 
   const handleDeleteCategory = async (categoryId: string) => {
@@ -86,6 +98,7 @@ export default function ContentPage() {
   };
 
   const filteredContents = contents.filter(content => {
+    if (!content?.title) return false;
     const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase())
     if (selectedCategories.length === 0) return matchesSearch
     return matchesSearch && content.categories?.some(cat => selectedCategories.includes(cat.categoryId))
@@ -189,6 +202,7 @@ export default function ContentPage() {
                 setContents(contents.filter(c => c.id !== id))
               }}
               setPreviousUrl={setPreviousUrl}
+              onClick={() => handleContentClick(content.id)}
             />
           ))}
         </div>

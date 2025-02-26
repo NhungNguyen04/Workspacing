@@ -21,12 +21,30 @@ export const getCategoriesByUserId = async (userId: string) => {
   }
 };
 
-export const getContentsByCategory = async (categoryId: string, userId: string) => {
+export const getCategoriesByTeamspaceId = async (teamspaceId: string) => {
+  try {
+    return await prisma.category.findMany({
+      where: { teamspaceId },
+      include: {
+        contents: {
+          include: {
+            content: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw new Error('Failed to fetch categories');
+  }
+};
+
+export const getContentsByCategory = async (categoryId: string) => {
   try {
     const category = await prisma.category.findFirst({
       where: {
         id: categoryId,
-        userId // Ensure user can only access their own categories
       },
       include: {
         contents: {
@@ -43,7 +61,7 @@ export const getContentsByCategory = async (categoryId: string, userId: string) 
   }
 };
 
-export const createCategory = async (data: { name: string; color: string; userId: string }) => {
+export const createCategory = async (data: { name: string; color: string; userId?: string, teamspaceId?: string }) => {
   return prisma.category.create({
     data
   });

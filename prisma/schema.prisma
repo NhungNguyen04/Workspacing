@@ -57,6 +57,7 @@ model Task {
   column    Column?  @relation(fields: [columnId], references: [id], onDelete: Cascade)
   position  Int?     
   description String? @default("")
+  content TaskContent[]
 
   @@index([userId])
   @@index([teamspaceId])
@@ -69,11 +70,13 @@ model Content {
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    String
+  userId    String?
+  teamspaceId String?
   categories ContentCategory[]
+  tasks TaskContent[]
 
   @@index([userId])
-  @@unique([id, userId])
+  @@index([teamspaceId])
 }
 
 model Category {
@@ -82,11 +85,26 @@ model Category {
   color     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    String
+  userId    String?
+  teamspaceId String?
   contents  ContentCategory[]
 
   @@index([userId])
+  @@index([teamspaceId])
+  @@unique([name, teamspaceId])
   @@unique([name, userId])
+}
+
+model TaskContent {
+  task       Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId     String
+  content    Content   @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  contentId  String
+  assignedAt DateTime  @default(now())
+
+  @@id([taskId, contentId])
+  @@index([taskId])
+  @@index([contentId])
 }
 
 model ContentCategory {

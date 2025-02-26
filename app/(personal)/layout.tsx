@@ -174,8 +174,8 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
 
         <div className="flex flex-col">
           {/* Top Navigation */}
-          <header className="flex h-16 items-center justify-between border-b px-4 bg-white">
-            <div className="flex items-center gap-4">
+          <header className="flex h-16 items-center justify-between border-b px-2 sm:px-4 bg-white">
+            <div className="flex items-center gap-2 sm:gap-4">
               <SidebarTrigger onClick={handleOpenSidebar}>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-4 w-4" />
@@ -186,17 +186,17 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
                 <AvatarImage src="/logo.png" alt="logoimage" />
                 <AvatarFallback>WS</AvatarFallback>
               </Avatar>
-              <span className="font-semibold text-gray-900">Workspacing</span>
-              <Button size="sm" className="gap-2" onClick={switchToFirstOrganization}>
+              <span className="font-semibold text-gray-900 hidden sm:inline">Workspacing</span>
+              <Button size="sm" className="hidden sm:flex gap-2" onClick={switchToFirstOrganization}>
                 Switch to Teamspace
               </Button>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="relative">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="relative hidden sm:block">
                 <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input className="w-[200px] pl-8" placeholder="Search..." />
               </div>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="hidden sm:inline-flex">
                 <Bell className="h-4 w-4" />
                 <span className="sr-only">Notifications</span>
               </Button>
@@ -210,6 +210,20 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <div className="sm:hidden space-y-2 p-2 border-b">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input className="w-full pl-8" placeholder="Search..." />
+                    </div>
+                    <Button size="sm" className="w-full justify-start gap-2" onClick={switchToFirstOrganization}>
+                      <LayoutDashboard className="h-4 w-4" />
+                      Switch to Teamspace
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
+                      <Bell className="h-4 w-4" />
+                      Notifications
+                    </Button>
+                  </div>
                   <DropdownMenuItem onClick={() => signOut()}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>

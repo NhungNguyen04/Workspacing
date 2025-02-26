@@ -6,6 +6,7 @@ export interface Category {
   color: string
   createdAt: Date
   updatedAt: Date
-  userId: string
+  userId?: string
+  teamspaceId?: string
   contents: ContentCategory[]
 }

@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const categoryId = searchParams.get('categoryId');
     if (categoryId) {
-        const userContents = await getContentsByCategory(categoryId, userId);
+        const userContents = await getContentsByCategory(categoryId);
         return NextResponse.json(userContents);
     } else {
         return NextResponse.json({ error: 'Category ID is required' }, { status: 400 });

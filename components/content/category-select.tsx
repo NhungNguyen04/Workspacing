@@ -1,4 +1,5 @@
 import { Category } from '@/types/category'
+import { Button } from '@/components/ui/button'
 
 interface CategorySelectProps {
   categories: Category[]
@@ -14,22 +15,24 @@ export function CategorySelect({ categories, selectedCategories, onSelect }: Cat
   return (
     <div className="flex flex-wrap gap-2">
       {categories.map((category) => (
-        <button
+        <Button
           key={category.id}
-          onClick={() => onSelect(category.id)}
-          className={`px-3 py-1 rounded-full text-sm transition-all duration-200`}
+          variant={selectedCategories.includes(category.id) ? "default" : "outline"}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onSelect(category.id)
+          }}
+          className="flex items-center gap-2 h-8 text-sm"
           style={{
-            backgroundColor: selectedCategories.includes(category.id) 
-              ? category.color 
-              : `${category.color}20`,
-            color: selectedCategories.includes(category.id) 
-              ? '#fff' 
-              : category.color,
-            border: `1px solid ${category.color}`,
+            backgroundColor: selectedCategories.includes(category.id) ? category.color : 'transparent',
+            borderColor: category.color,
+            color: selectedCategories.includes(category.id) ? '#fff' : 'inherit',
           }}
         >
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: category.color }} />
           {category.name}
-        </button>
+        </Button>
       ))}
     </div>
   )

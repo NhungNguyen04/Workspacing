@@ -5,7 +5,8 @@ const prisma = new PrismaClient();
 export const createContent = async (data: {
   title: string;
   content: string;
-  userId: string;
+  userId?: string;
+  teamspaceId?: string;
   categoryIds?: string[];
 }) => {
   const { categoryIds, ...contentData } = data;
@@ -37,24 +38,50 @@ export const getContentByUserId = async (userId: string) => {
         include: {
           category: true
         }
+      },
+      tasks: {
+        include: {
+          task: true
+        }
       }
     },
     orderBy: { updatedAt: 'desc' }
   });
 };
 
-export const getContentById = async (id: string, userId: string) => {
+export const getContentByTeamspaceId = async (teamspaceId: string) => {
+  return prisma.content.findMany({
+    where: { teamspaceId },
+    include: {
+      categories: {
+        include: {
+          category: true
+        }
+      },
+      tasks: {
+        include: {
+          task: true
+        }
+      }
+    },
+    orderBy: { updatedAt: 'desc' }
+  });
+}
+
+export const getContentById = async (id: string) => {
   return prisma.content.findUnique({
     where: {
-      id_userId: {
-        id,
-        userId
-      }
+      id
     },
     include: {
       categories: {
         include: {
           category: true
+        }
+      },
+      tasks: {
+        include: {
+          task: true
         }
       }
     }
@@ -63,7 +90,6 @@ export const getContentById = async (id: string, userId: string) => {
 
 export const updateContent = async (
   id: string,
-  userId: string,
   data: {
     title?: string;
     content?: string;
@@ -94,7 +120,7 @@ export const updateContent = async (
   }
 
   return prisma.content.update({
-    where: { id_userId: { id, userId } },
+    where: { id },
     data: filteredUpdateData,
     include: {
       categories: {
@@ -106,9 +132,9 @@ export const updateContent = async (
   });
 };
 
-export const deleteContent = async (id: string, userId: string) => {
+export const deleteContent = async (id: string) => {
   return prisma.content.delete({
-    where: { id_userId: { id, userId } }
+    where: { id }
   });
 };
 

@@ -13,6 +13,18 @@ export async function getContents(): Promise<Content[]> {
   return response.json();
 }
 
+export async function getTeamspaceContents(teamspaceId: string): Promise<Content[]> {
+  const response = await fetch(`/api/teamspace/contents?teamspaceId=${teamspaceId}`, {
+    cache: 'no-store'
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch teamspace contents');
+  }
+
+  return response.json();
+}
+
 export async function getContentsByCategory(categoryId: string): Promise<Content[]> {
   const response = await fetch(`/api/contents/category?categoryId=${categoryId}`, {
     cache: 'no-store'
@@ -37,8 +49,33 @@ export async function getCategories(): Promise<Category[]> {
   return response.json();
 }
 
+export async function getTeamspaceCategories(teamspaceId: string): Promise<Category[]> {
+  const response = await fetch(`/api/teamspace/categories?teamspaceId=${teamspaceId}`, {
+    cache: 'no-store'
+  });
+  console.log("res", response);
+  if (!response.ok) {
+    throw new Error('Failed to fetch teamspace categories');
+  }
+  return response.json();
+}
+
 export async function createContent(title: string, categoryIds?: string[]): Promise<Content> {
   const response = await fetch(`/api/contents`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, categoryIds }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create content');
+  }
+
+  return response.json();
+}
+
+export async function createTeamspaceContent(title: string, teamspaceId: string, categoryIds?: string[]): Promise<Content> {
+  const response = await fetch(`/api/teamspace/contents?teamspaceId=${teamspaceId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ title, categoryIds }),
@@ -89,6 +126,20 @@ export async function deleteContent(contentId: string): Promise<void> {
 
 export async function createCategory(name: string, color: string): Promise<Category> {
   const response = await fetch(`/api/categories`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, color }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create category');
+  }
+
+  return response.json();
+}
+
+export async function createTeamspaceCategory(name: string, color: string, teamspaceId: string): Promise<Category> {
+  const response = await fetch(`/api/teamspace/categories?teamspaceId=${teamspaceId}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, color }),

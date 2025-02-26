@@ -76,24 +76,42 @@ export default function TinyMCEEditor({ value, onChange }: TinyMCEEditorProps) {
         },
         content_style: `
           body {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            width: 90%; /* Full width */
-            height: 90%; /* Full height */
-            min-height: 800px; /* Minimum height of the content */
-            padding: 20px; /* Padding within the content */
-            margin: auto; /* Center the content if smaller than max width */
-            box-sizing: border-box; /* Include padding in height calculation */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #374151;
+            background-color: #ffffff;
+            padding: 1rem;
+            margin: 0;
+            max-width: 100%;
           }
+          p { margin: 0 0 1rem 0; }
+          h1, h2, h3, h4, h5, h6 { margin: 1.5rem 0 1rem 0; }
         `,
-        min_height: 700, // Set the editor’s total height
-        max_width: 1000, // Set the editor’s total width
+        width: '100%',
+        min_height: 650,
+        resize: true,
+        autoresize_bottom_margin: 50,
+        skin: 'oxide',
+        menubar: false,
+        branding: false,
+        elementpath: false,
+        statusbar: true,
+        border: false,
+        style_formats_autohide: true,
+        content_css: 'default',
+        placeholder: 'Start writing...',
         setup: (editor) => {
-          // Listen for keydown events and override Delete key behavior
+          editor.on('init', () => {
+            editor.getContainer().style.borderRadius = '0.375rem';
+            editor.getContainer().style.border = '1px solid #e5e7eb';
+          });
+          
+          // Keep existing Delete key handler
           editor.on('keydown', (e) => {
             if (e.key === 'Delete') {
-              e.preventDefault(); // Prevent the default Delete action
-              editor.execCommand('mceDelete'); // Execute Backspace-like behavior
+              e.preventDefault();
+              editor.execCommand('mceDelete');
             }
           });
         },

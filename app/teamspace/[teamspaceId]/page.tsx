@@ -20,6 +20,7 @@ import { getBoards, createBoard, updateBoard, deleteBoard, fetchImages } from '.
 import { Board } from '@/types/board'
 import { useBoardStore } from '@/store/BoardStore'
 
+
 function generatePastelColor() {
   const hue = Math.floor(Math.random() * 360)
   return `hsl(${hue}, 70%, 95%)`
@@ -41,7 +42,6 @@ export default function BoardsPage() {
   const [editTitle, setEditTitle] = useState("")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [boardToDelete, setBoardToDelete] = useState<Board | null>(null)
-
   useEffect(() => {
     const loadImages = async () => {
       try {

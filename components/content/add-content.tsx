@@ -12,22 +12,28 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { toast } from 'react-toastify'
-import { createContent } from '@/components/content/index'
+import { createContent, createTeamspaceContent } from '@/components/content/index'
 import { useContentStore } from '@/store/ContentStore'
 import { CategorySelect } from './category-select'
 import { AddCategory } from './add-category'
+import { useParams } from 'next/navigation'
 
 export function AddContent() {
   const { contents, setContents, categories } = useContentStore()
   const [newContentTitle, setNewContentTitle] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [isCreating, setIsCreating] = useState(false)
+  const param = useParams();
+  const teamspaceId = param.teamspaceId as string;
+
 
   const handleCreateContent = async () => {
     if (!newContentTitle.trim()) return
     setIsCreating(true)
     try {
-      const newContent = await createContent(newContentTitle, selectedCategories)
+      let newContent;
+      if (teamspaceId) newContent = await createTeamspaceContent(newContentTitle, teamspaceId, selectedCategories)
+      else newContent = await createContent(newContentTitle, selectedCategories)
       setContents([...contents, newContent])
       setNewContentTitle('')
       setSelectedCategories([])

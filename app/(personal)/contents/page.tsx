@@ -86,6 +86,7 @@ export default function ContentPage() {
   };
 
   const filteredContents = contents.filter(content => {
+    if (!content?.title) return false;
     const matchesSearch = content.title.toLowerCase().includes(searchQuery.toLowerCase())
     if (selectedCategories.length === 0) return matchesSearch
     return matchesSearch && content.categories?.some(cat => selectedCategories.includes(cat.categoryId))
@@ -129,11 +130,11 @@ export default function ContentPage() {
   }
 
   return (
-    <div className="container max-w-7xl mx-auto p-6">
+    <div className="container max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
       {/* Header Section */}
-      <div className="flex justify-end mb-6">
-        <div className="flex items-center gap-4">
-          <div className="relative w-72">
+      <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+          <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
             <Input
               type="text"
@@ -143,29 +144,35 @@ export default function ContentPage() {
               className="pl-9 w-full"
             />
           </div>
-          <AddContent />
+          <div className="w-full sm:w-auto">
+            <AddContent />
+          </div>
         </div>
       </div>
 
       {/* Category Management Section */}
-      <div className="mb-6">
-        <div className="flex items-center gap-4">
-          {renderCategoryButtons()}
-          <Button
-            variant="outline"
-            size="sm"
-            className="font-medium"
-            onClick={() => setIsManageMode(!isManageMode)}
-          >
-            {isManageMode ? 'Done' : 'Manage Categories'}
-          </Button>
-          {isManageMode && (
-            <AddCategory 
-              onCategoryAdded={(newCategory) => {
-                setCategories([...categories, newCategory])
-              }} 
-            />
-          )}
+      <div className="mb-6 overflow-x-auto">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-wrap gap-2 min-w-0">
+            {renderCategoryButtons()}
+          </div>
+          <div className="flex gap-2 mt-2 sm:mt-0">
+            <Button
+              variant="outline"
+              size="sm"
+              className="font-medium whitespace-nowrap"
+              onClick={() => setIsManageMode(!isManageMode)}
+            >
+              {isManageMode ? 'Done' : 'Manage Categories'}
+            </Button>
+            {isManageMode && (
+              <AddCategory 
+                onCategoryAdded={(newCategory) => {
+                  setCategories([...categories, newCategory])
+                }} 
+              />
+            )}
+          </div>
         </div>
       </div>
 
@@ -175,7 +182,7 @@ export default function ContentPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredContents.map((content) => (
             <ContentCard
               key={content.id}
@@ -196,7 +203,7 @@ export default function ContentPage() {
       )}
 
       {!isLoading && filteredContents.length === 0 && (
-        <div className="flex flex-col items-center justify-center h-64 text-center">
+        <div className="flex flex-col items-center justify-center h-64 text-center p-4">
           <div className="rounded-full bg-gray-100 p-4 mb-4">
             <Search className="h-6 w-6 text-gray-400" />
           </div>

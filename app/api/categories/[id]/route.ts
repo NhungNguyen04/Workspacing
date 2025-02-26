@@ -20,7 +20,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid category ID' }, { status: 400 });
     }
 
-    const contents = await getContentsByCategory(id, userId);
+    const contents = await getContentsByCategory(id);
     return NextResponse.json(contents);
   } catch (error) {
     console.error('Error fetching category contents:', error);

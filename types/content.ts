@@ -1,4 +1,5 @@
 import { Category } from './category'
+import { Task } from './task'
 
 export interface Content {
   id: string
@@ -6,7 +7,8 @@ export interface Content {
   content: string
   createdAt: Date
   updatedAt: Date
-  userId: string
+  userId?: string | null;
+  teamspaceId?: string | null;
   categories: ContentCategory[]
 }
 

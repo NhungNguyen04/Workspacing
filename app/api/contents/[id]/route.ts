@@ -54,7 +54,7 @@ export async function PUT(
     if (body.content !== undefined) updatePayload.content = body.content.trim();
     if (body.categoryIds !== undefined) updatePayload.categoryIds = body.categoryIds;
 
-    const updatedContent = await updateContent(id, userId, updatePayload);
+    const updatedContent = await updateContent(id, updatePayload);
     if (!updatedContent) {
       return NextResponse.json({ error: 'Content not found' }, { status: 404 });
     }
@@ -84,7 +84,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 });
     }
 
-    await deleteContent(id, userId);
+    await deleteContent(id);
     return NextResponse.json({ message: 'Content deleted successfully' });
   } catch (error) {
     console.error('Error deleting content:', error);
@@ -107,7 +107,7 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid content ID' }, { status: 400 });
     }
 
-    const content = await getContentById(id, userId);
+    const content = await getContentById(id);
     if (!content) {
       return NextResponse.json({ error: 'Content not found' }, { status: 404 });
     }
