@@ -63,7 +63,7 @@ WorkSpacing is a powerful web-based **task & content management** platform for i
 
 ## 🤝 Support & Feedback
 Have questions or suggestions? Let’s connect!  
-📧 Email: [support@workspacing.com](mailto:support@workspacing.com)  
+📧 Email: [nguyennhungforwork04@gmail.com](nguyennhungforwork04@gmail.com)  
 
 ---
 
