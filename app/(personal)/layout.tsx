@@ -59,14 +59,14 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   const [showDialog, setShowDialog] = React.useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const { contents, setContents, isLoading, setLoading } = useContentStore()
+  const { contents, setContents, isLoading, setLoading, contentsLoaded } = useContentStore()
 
   const displayContents = contents.slice(0, 5)
 
-  // Add useEffect for controlled API calls
+  // Add useEffect for controlled API calls - only fetch if contents not already loaded
   React.useEffect(() => {
     const fetchData = async () => {
-      if (!isLoaded || !userId || contents.length > 0) return;
+      if (!isLoaded || !userId || contentsLoaded || isLoading) return;
       
       setLoading(true);
       try {
@@ -80,7 +80,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
     };
 
     fetchData();
-  }, [isLoaded, userId]);
+  }, [isLoaded, userId, contentsLoaded, isLoading, setContents, setLoading]);
 
   if (!isLoaded || !userId || isLoading) {
     return <div>Loading...</div>

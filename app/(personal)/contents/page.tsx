@@ -26,41 +26,58 @@ export default function ContentPage() {
     setCategories,
     isLoading, 
     setLoading,
-    setPreviousUrl
+    setPreviousUrl,
+    contentsLoaded,
+    categoriesLoaded
   } = useContentStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const { user, isLoaded, isSignedIn } = useUser()
   const [isManageMode, setIsManageMode] = useState(false)
   const router = useRouter()
+  const [error, setError] = useState('')
 
   const handleContentClick = (id: string) => {
     setPreviousUrl(window.location.pathname)
     router.push(`/contents/${id}`)
   }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!isLoaded || !isSignedIn || (contents.length > 0 && categories.length > 0)) return;
-      
+  const fetchData = async () => {
+    try {
       setLoading(true);
-      try {
-        const [categoriesData, contentsData] = await Promise.all([
-          getCategories(),
-          getContents()
-        ]);
-        setCategories(categoriesData);
-        setContents(contentsData);
-      } catch (error) {
-        toast.error('Failed to load data');
-      } finally {
-        setLoading(false);
+      
+      // Only fetch contents if not already loaded
+      if (!contentsLoaded) {
+        const contentsResponse = await getContents();
+        setContents(contentsResponse);
       }
+      
+      // Only fetch categories if not already loaded
+      if (!categoriesLoaded) {
+        const categoriesResponse = await getCategories();
+        setCategories(categoriesResponse);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load contents';
+      toast.error(errorMessage);
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isLoaded && isSignedIn && isMounted && (!contentsLoaded || !categoriesLoaded)) {
+      fetchData();
+    }
+    
+    return () => {
+      isMounted = false;
     };
-
-    fetchData();
-  }, [isLoaded, isSignedIn, contents.length, categories.length]);
-
+  }, [isLoaded, isSignedIn, contentsLoaded, categoriesLoaded]);
+  
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategories(prev => {
       if (prev.includes(categoryId)) {
