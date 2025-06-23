@@ -12,7 +12,7 @@ import {
   X
 } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { getContents, getCategories, createContent, deleteCategory } from '@/components/content/index'
+import { getContents, getCategories, deleteCategory } from '@/lib/api/content'
 import { useContentStore } from '@/store/ContentStore'
 import { AddCategory } from '@/components/content/add-category'
 import { ContentCard } from '@/components/content/content-card'

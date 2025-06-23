@@ -10,7 +10,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { createCategory, createTeamspaceCategory } from './index';
+import { createCategory, createTeamspaceCategory } from '@/lib/api/content';
 import { toast } from 'react-toastify';
 import { Category } from '@/types/category';
 import './color-picker.css';

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Loader2, Save, ArrowLeft } from 'lucide-react'
 import { toast } from 'react-toastify'
-import { getContent, updateContent } from '.'
+import { getContent, updateContent } from '@/lib/api/contents'
 import 'react-toastify/dist/ReactToastify.css'
 import { useContentStore } from '@/store/ContentStore'
 

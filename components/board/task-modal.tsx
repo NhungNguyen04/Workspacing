@@ -9,11 +9,11 @@ import { Textarea } from "../ui/textarea";
 import { format } from "date-fns";
 import { set } from "lodash";
 import { useUser } from "@clerk/nextjs";
-import { updateTaskDetails, deleteTask, fetchTaskLogs } from "./index";
+import { updateTaskDetails, deleteTask, fetchTaskLogs } from '@/lib/api/board'
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
 import { useContentStore } from "@/store/ContentStore";
 import { useCurrentIds } from "@/hooks/use-user";
-import { getTeamspaceContents } from "../content";
+import { getTeamspaceContents } from "@/lib/api/content";
 
 interface AuditLog {
   id: string;

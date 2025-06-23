@@ -19,8 +19,8 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { toast } from 'react-toastify'
-import { getContents, getCategories, deleteCategory, getTeamspaceCategories, getTeamspaceContents } from '@/components/content/index'
-import { useContentStore } from '@/store/ContentStore'
+import { getContents, getCategories, deleteCategory, getTeamspaceCategories, getTeamspaceContents } from '@/lib/api/content'
+import { useTeamspaceContentStore } from '@/store/TeamspaceContentStore'
 import { AddCategory } from '@/components/content/add-category'
 import { ContentCard } from '@/components/content/content-card'
 import { AddContent } from '@/components/content/add-content'
@@ -34,8 +34,9 @@ export default function ContentPage() {
     setCategories,
     isLoading, 
     setLoading,
-    setPreviousUrl  // Add this to destructuring
-  } = useContentStore()
+    setPreviousUrl,
+    currentTeamspaceId
+  } = useTeamspaceContentStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const { user, isLoaded, isSignedIn } = useUser()

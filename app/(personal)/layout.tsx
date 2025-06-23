@@ -39,8 +39,9 @@ import {
 import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog"
 import { useAuth, useUser, useOrganizationList } from "@clerk/nextjs"
 import Footer from "@/components/Footer"
-import { getContents } from '@/components/content'
+import { getContents } from '@/lib/api/content'
 import { useContentStore } from '@/store/ContentStore'
+import { useTeamspaceContentStore } from '@/store/TeamspaceContentStore'
 
 const personalNav = [
   { icon: ListTodo, label: "Tasks", href: "/" },
@@ -82,17 +83,20 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
     fetchData();
   }, [isLoaded, userId, contentsLoaded, isLoading, setContents, setLoading]);
 
-  if (!isLoaded || !userId || isLoading) {
+  if (!isLoaded || !userId || !contentsLoaded) {
     return <div>Loading...</div>
   }
 
   const handleOpenSidebar = () => {
     setOpenSidebar(!openSidebar)
   }
-
   const switchToFirstOrganization = () => {
     if (userMemberships.count) {
       const firstOrganizationId = userMemberships.data[0].id
+      // Reset personal contents to ensure clean state when switching back
+      useTeamspaceContentStore.getState().resetStore();
+      // Set the current teamspace ID for use when loading contents
+      useTeamspaceContentStore.getState().setCurrentTeamspaceId(firstOrganizationId);
       router.push(`/teamspace/${firstOrganizationId}`)
     } else {
       setShowDialog(true)

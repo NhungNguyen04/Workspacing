@@ -11,7 +11,7 @@ import ColumnComponent from './column'
 import { useBoardStore } from '@/store/BoardStore'
 import {toast} from "react-toastify"
 import 'react-toastify/dist/ReactToastify.css'
-import { fetchTasks, updateColumns, updateTasks, createColumn, createTask } from '.'
+import { fetchTasks, updateColumns, updateTasks, createColumn, createTask } from '@/lib/api/board'
 
 export const BoardInterface: React.FC = () => {
   const [newColumnTitle, setNewColumnTitle] = useState<string | null>(null)

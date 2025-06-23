@@ -40,10 +40,13 @@ import { useAuth, useOrganization, useUser } from "@clerk/nextjs"
 import { OrganizationSwitcher } from "@clerk/nextjs"
 import {startCase} from "lodash";
 import { useBoardStore } from "@/store/BoardStore"
-import { getBoards } from "."
+import { getBoards } from "@/lib/api/teamspaceboard"
 import { toast } from "react-toastify"
 import 'react-toastify/dist/ReactToastify.css' 
 import { useCurrentIds } from "@/hooks/use-user"
+import { useTeamspaceContentStore } from '@/store/TeamspaceContentStore'
+import { useContentStore } from '@/store/ContentStore'
+import { getTeamspaceContents } from '@/lib/api/content'
 
 function useMetaData(organization: any) {
   React.useEffect(() => {
@@ -82,20 +85,55 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
         setLoading(false);
     }
   }
+  // Fetch teamspace contents when organization changes
+  const { 
+    contents: teamspaceContents, 
+    setContents: setTeamspaceContents, 
+    isLoading: teamspaceContentLoading, 
+    setLoading: setTeamspaceContentLoading,
+    contentsLoaded: teamspaceContentsLoaded,
+    setCurrentTeamspaceId,
+    currentTeamspaceId
+  } = useTeamspaceContentStore();
+
+  const fetchTeamspaceContents = async (teamspaceId: string) => {
+    try {
+      setTeamspaceContentLoading(true);
+      const data = await getTeamspaceContents(teamspaceId);
+      setTeamspaceContents(data);
+    } catch (error) {
+      console.error('Failed to fetch teamspace contents:', error);
+      toast.error('Failed to load teamspace contents');
+    } finally {
+      setTeamspaceContentLoading(false);
+    }
+  };
 
   React.useEffect(() => {
     // Redirect only if the user is not already on a valid organization route
     if (organization?.id) {
       setCurrentOrgId(organization.id); // Store current org ID
+      setCurrentTeamspaceId(organization.id); // Store in teamspace content store
+      
       const currentPath = (pathname ?? '').split('/').slice(0, 3).join('/');
       const organizationPath = `/teamspace/${organization.id}`;
 
       if (currentPath !== organizationPath) {
         router.push(organizationPath);
       }
+      
+      // Fetch boards and contents
       fetchBoards(organization.id);
+      
+      // Only fetch contents if not loaded or if teamspace changed
+      if (!teamspaceContentsLoaded || currentTeamspaceId !== organization.id) {
+        fetchTeamspaceContents(organization.id);
+      }
+      
+      // Reset personal content store when in teamspace
+      useContentStore.getState().setContentsLoaded(false);
     }
-  }, [organization, pathname, router, setCurrentOrgId]);
+  }, [organization, pathname, router, setCurrentOrgId, teamspaceContentsLoaded, currentTeamspaceId]);
   
 
   if (!isLoaded || !userId) {
@@ -108,6 +146,12 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
 
   const handleBoardClick = (id: string) => {
     router.push(`/boards/${id}`)
+  }
+
+  const switchToPersonal = () => {
+    // Reset teamspace content store when switching to personal
+    useTeamspaceContentStore.getState().resetStore();
+    router.push('/');
   }
 
   const teamNav = [
@@ -201,12 +245,9 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
                       organizationSwitcherTrigger: "flex items-center gap-2 rounded-md border p-2",
                     },
                   }}
-                />
-                <Link href="/" passHref>
-                  <Button size="sm" className="gap-2">
-                    Switch to Personal
-                  </Button>
-                </Link>
+                />                <Button size="sm" className="gap-2" onClick={switchToPersonal}>
+                  Switch to Personal
+                </Button>
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
@@ -241,13 +282,10 @@ export default function TeamspaceLayout({ children }: { children: React.ReactNod
                           organizationSwitcherTrigger: "flex w-full items-center gap-2 rounded-md border p-2",
                         },
                       }}
-                    />
-                    <Link href="/" passHref className="w-full">
-                      <Button size="sm" className="w-full justify-start gap-2">
-                        <LayoutDashboard className="h-4 w-4" />
-                        Switch to Personal
-                      </Button>
-                    </Link>
+                    />                    <Button size="sm" className="w-full justify-start gap-2" onClick={switchToPersonal}>
+                      <LayoutDashboard className="h-4 w-4" />
+                      Switch to Personal
+                    </Button>
                     <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
                       <Bell className="h-4 w-4" />
                       Notifications

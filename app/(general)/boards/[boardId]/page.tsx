@@ -4,27 +4,21 @@ import { redirect, useParams, useRouter } from 'next/navigation'
 import { BoardInterface } from '@/components/board/board'
 import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
-import { Loader2, ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import { useBoardStore } from '@/store/BoardStore'
-import { fetchBoard, fetchColumns } from './index'
-import { set } from 'lodash'
+import { fetchBoard } from '@/lib/api/generalboard'
 import {useAuth} from '@clerk/nextjs'
-import {Board} from '@/types/board'
-import {Column} from '@/types/column'
 
 export default function BoardPage() {
   const params = useParams()
   const boardId = params?.boardId as string
   const { isLoaded, isSignedIn } = useUser()
-  const router = useRouter()
   const { orgId } = useAuth()
   const [error, setError] = useState(false)
   const { 
     activeBoard, 
     setActiveBoard, 
     setColumns,
-    columns,
     hydratePreviousUrl 
   } = useBoardStore()
 

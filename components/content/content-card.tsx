@@ -4,7 +4,7 @@ import { Content } from '@/types/content'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Pencil, Trash2 } from 'lucide-react'
-import { updateContent, deleteContent } from './index'
+import { updateContent, deleteContent } from '@/lib/api/content'
 import { toast } from 'react-toastify'
 import {
   Dialog,

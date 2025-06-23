@@ -4,7 +4,7 @@ import { Column } from "@/types/column";
 import { useState } from "react";
 import { useBoardStore } from "@/store/BoardStore";
 import { toast } from "react-toastify";
-import { updateColumnTitle, deleteColumn } from ".";
+import { updateColumnTitle, deleteColumn } from "@/lib/api/board";
 import { MoreHorizontal, X } from "lucide-react";
 import {
     Popover,

@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { toast } from 'react-toastify'
-import { createContent, createTeamspaceContent } from '@/components/content/index'
+import { createContent, createTeamspaceContent } from '@/lib/api/content'
 import { useContentStore } from '@/store/ContentStore'
 import { CategorySelect } from './category-select'
 import { AddCategory } from './add-category'

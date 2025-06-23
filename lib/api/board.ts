@@ -1,6 +1,5 @@
 import { Column } from '@/types/column'
 import { Task } from '@/types/task'
-import { useBoardStore } from '@/store/BoardStore'
 
 export async function updateBoardTitle(boardId: string, newTitle: string) {
   const response = await fetch(`/api/teamspace/boards/${boardId}`, {

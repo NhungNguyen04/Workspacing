@@ -11,7 +11,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { fetchTasks, createTasks, updateTasks as updateTasksApi } from './index'
+import { fetchTasks, createTasks, updateTasks as updateTasksApi } from '@/lib/api/tasks'
 import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { Task } from '@/types/task'

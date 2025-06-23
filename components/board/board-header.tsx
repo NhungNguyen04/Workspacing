@@ -3,7 +3,7 @@ import { ChevronLeft, UserIcon, Sparkles, Loader2 } from "lucide-react";
 import { useBoardStore } from "@/store/BoardStore";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { updateBoardTitle, generateBoardFromAI, applyAIGeneratedBoard } from ".";
+import { updateBoardTitle, generateBoardFromAI, applyAIGeneratedBoard} from "@/lib/api/board";
 import {toast} from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
 import { FaRegObjectUngroup } from "react-icons/fa";
