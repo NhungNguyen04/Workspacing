@@ -162,3 +162,15 @@ export async function deleteCategory(categoryId: string): Promise<void> {
   }
 }
 
+export async function getContentTasks(contentId: string) {
+  const response = await fetch(`/api/contents/tasks?contentId=${contentId}`, {
+    cache: 'no-store'
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch content tasks');
+  }
+
+  return response.json();
+}
+

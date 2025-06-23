@@ -3,39 +3,53 @@ import { Task } from '@/types/task';
 import { createAuditLog } from '@/services/auditLogService';
 
 export async function createTask(data: Task, userId?: string, teamspaceId?: string) {
-
   if (!data.columnId && !data.userId) {
     throw new Error('Column ID or userId is required');
   }
 
-  const newTask = await prisma.task.create({
-    data: {
-      ...data,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      repeat: data.repeat || '',
-      category: data.category || '',
-      position: data.position ?? 0,
-      columnId: data.columnId ?? null,
-      userId: userId || null,
-      teamspaceId: teamspaceId ?? null,
+  if (data.dueDate && data.dueDate < new Date()) {
+    throw new Error('Due date cannot be in the past');
+  }
+
+  if (data.columnId) {
+    const columnExists = await prisma.column.findUnique({
+      where: { id: data.columnId },
+    });
+    if (!columnExists) {
+      throw new Error('Invalid columnId');
     }
+  }
+
+  const { assignedTo, columnId, position, ...restData } = data;
+  const taskData: any = {
+    ...restData,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    repeat: data.repeat || '',
+    category: data.category || '',
+    position: position ?? 0,
+    columnId: columnId ?? null,
+    userId: userId || null,
+    teamspaceId: teamspaceId ?? null,
+    assignedTo: Array.isArray(assignedTo) ? assignedTo : [],
+  };
+
+  const newTask = await prisma.task.create({
+    data: taskData
   });
 
   try {
-    if (newTask) {
-      await createAuditLog({
-        entityId: newTask.id,
-        entityType: 'TASK',
-        entityTitle: newTask.title,
-        action: 'CREATE',
-      });
-    }
-    return newTask;
+    await createAuditLog({
+      entityId: newTask.id,
+      entityType: 'TASK',
+      entityTitle: newTask.title,
+      action: 'CREATE',
+    });
   } catch (error) {
     console.error('Failed to create audit log:', error);
-    return newTask;
   }
+
+  return newTask;
 }
 
 export async function createTasks(tasks: Task[], userId?: string, teamspaceId?: string) {
@@ -47,17 +61,23 @@ export async function createTasks(tasks: Task[], userId?: string, teamspaceId?: 
 
     const { columnId, position, ...restData } = data;
 
+    // Remove assignedTo if it's null to satisfy Prisma's type requirements
+    const { assignedTo, ...rest } = restData;
+    const dataToCreate: any = {
+      ...rest,
+      ...(teamspaceId ? { teamspaceId } : { userId }),
+      repeat: rest.repeat || '',
+      category: rest.category || '',
+      column: columnId ? { connect: { id: columnId } } : undefined,
+      columnId: undefined,
+      dueDate: rest.dueDate || null,
+      position: position ?? undefined,
+    };
+    if (Array.isArray(assignedTo)) {
+      dataToCreate.assignedTo = assignedTo;
+    }
     const createdTask = await prisma.task.create({
-      data: {
-        ...restData,
-        ...(teamspaceId ? { teamspaceId } : { userId }),
-        repeat: restData.repeat || '',
-        category: restData.category || '',
-        column: columnId ? { connect: { id: columnId } } : undefined,
-        columnId: undefined,
-        dueDate: restData.dueDate || null,
-        position: position ?? undefined,
-      },
+      data: dataToCreate,
     });
 
     try {
@@ -98,17 +118,15 @@ export async function updateTask(taskId: string, data: Partial<Task>) {
   if (data.dueDate && data.dueDate < new Date()) {
     throw new Error('Due date cannot be in the past');
   }
+  const updateData: any = {
+    ...data,
+  };
 
   const updatedTask = await prisma.task.update({
     where: { 
       id: taskId 
     },
-    data: {
-      ...data,
-      repeat: data.repeat || '',
-      category: data.category || '',
-      dueDate: data.dueDate || null,
-    },
+    data: updateData,
   });
 
   try {
@@ -127,34 +145,40 @@ export async function updateTask(taskId: string, data: Partial<Task>) {
 
 export async function updateTasks(tasks: Task[]) {
   const updatedTasks = [];
-  for (const data of tasks) {
-    if (data.dueDate && data.dueDate < new Date()) {
+  for (const task of tasks) {
+    if (task.dueDate && task.dueDate < new Date()) {
       throw new Error('Due date cannot be in the past');
     }
-    if (data.columnId) {
+
+    if (task.columnId) {
       const columnExists = await prisma.column.findUnique({
-        where: { id: data.columnId },
+        where: { id: task.columnId },
       });
       if (!columnExists) {
         throw new Error('Invalid columnId');
       }
     }
 
+    const { columnId, assignedTo, ...restData } = task;
+    const updateData: any = {
+      ...restData,
+      repeat: task.repeat || '',
+      category: task.category || '',
+      dueDate: task.dueDate || null,
+      columnId: columnId ?? undefined,
+      assignedTo: Array.isArray(assignedTo) ? assignedTo : undefined,
+    };
+
     const updatedTask = await prisma.task.update({
-      where: { id: data.id },
-      data: {
-        ...data,
-        repeat: data.repeat || '',  // Ensure repeat is never null
-        category: data.category || '',
-        dueDate: data.dueDate || null,
-      },
+      where: { id: task.id },
+      data: updateData,
     });
 
     try {
       await createAuditLog({
-        entityId: data.id,
+        entityId: task.id,
         entityType: 'TASK',
-        entityTitle: data.title || updatedTask.title,
+        entityTitle: task.title || updatedTask.title,
         action: 'UPDATE',
       });
     } catch (error) {

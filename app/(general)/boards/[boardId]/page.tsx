@@ -7,13 +7,15 @@ import { useUser } from '@clerk/nextjs'
 import { Loader2 } from 'lucide-react'
 import { useBoardStore } from '@/store/BoardStore'
 import { fetchBoard } from '@/lib/api/generalboard'
-import {useAuth} from '@clerk/nextjs'
+import {useCurrentIds} from '@/hooks/use-user'
+import { useAuth } from '@clerk/nextjs'
 
 export default function BoardPage() {
   const params = useParams()
   const boardId = params?.boardId as string
   const { isLoaded, isSignedIn } = useUser()
-  const { orgId } = useAuth()
+  const {currentOrgId} = useCurrentIds()
+  const {orgId} = useAuth()
   const [error, setError] = useState(false)
   const { 
     activeBoard, 
@@ -64,6 +66,18 @@ export default function BoardPage() {
       </div>
     )
   }
+
+  if (currentOrgId != activeBoard?.teamspaceId) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-gray-600">You do not have permission to view this board.</p>
+        </div>
+      </div>
+    )
+  }
+
 
   return (
     <div className="h-full w-auto" style={{ 

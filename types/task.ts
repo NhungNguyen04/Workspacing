@@ -15,6 +15,8 @@ export interface Task {
   columnId?: string | null;
   description?: string | null;
   position?: number | null;
+  content?: Content | null;
+  assignedTo: string[];
 }
 
 export interface TaskWithColumn extends Task {

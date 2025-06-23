@@ -180,7 +180,6 @@ export const BoardInterface: React.FC = () => {
       setIsColumnLoading(false);
     }
   };
-
   const handleAddTask = async (columnId: string, title: string) => {
     if (!title.trim()) return;
     
@@ -193,9 +192,12 @@ export const BoardInterface: React.FC = () => {
       category: "",
       columnId,
       position: tasks.filter(t => t.columnId === columnId).length,
-      userId: 'null',
+      userId: null,
+      teamspaceId: null,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      assignedTo: [],
+      description: null
     };
   
     // Optimistic update

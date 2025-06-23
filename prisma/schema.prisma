@@ -58,6 +58,7 @@ model Task {
   position  Int?     
   description String? @default("")
   content TaskContent[]
+  assignedTo String[]
 
   @@index([userId])
   @@index([teamspaceId])

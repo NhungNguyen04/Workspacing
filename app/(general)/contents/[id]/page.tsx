@@ -11,6 +11,8 @@ import { toast } from 'react-toastify'
 import { getContent, updateContent } from '@/lib/api/contents'
 import 'react-toastify/dist/ReactToastify.css'
 import { useContentStore } from '@/store/ContentStore'
+import { useAuth } from '@clerk/nextjs'
+import { useCurrentIds } from '@/hooks/use-user'
 
 const TinyMCEEditor = dynamic(() => import('@/components/content/tinymce-editor'), { ssr: false })
 
@@ -22,6 +24,8 @@ export default function ContentEditorPage() {
   const params = useParams()
   const { id } = params ?? {}
   const { isLoaded, isSignedIn } = useUser()
+  const {userId} = useAuth()
+  const {currentOrgId: orgId} = useCurrentIds()
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -68,7 +72,7 @@ export default function ContentEditorPage() {
 
   const handleBack = () => {
     handleSave()
-    router.push(previousUrl || '/')
+    router.back();
   }
 
   useEffect(() => {
@@ -85,6 +89,17 @@ export default function ContentEditorPage() {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   });
+
+  if ((activeContent?.userId && userId!= activeContent?.userId) || (activeContent?.teamspaceId && orgId != activeContent?.teamspaceId)) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-gray-600">You do not have permission to view this content.</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!isLoaded || !isSignedIn) {
     return (

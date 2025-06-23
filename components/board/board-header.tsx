@@ -196,7 +196,7 @@ export default function BoardHeader() {
   return (
     <div className="flex-1">
       <div className="h-16 w-full bg-white bg-opacity-80 pl-4 mb-4 items-center flex border border-transparent border-t-0 border-l-0 border-r-0 border-b-4 border-b-gradient-to-r from-green-200 via-blue-200 to-blue-500 shadow-lg shadow-gray-300/50">
-        <Button variant="outline" size="icon" style={{background: 'transparent', border: 'none'}} onClick={()=> {router.push(previousUrl || "/")}}>
+        <Button variant="outline" size="icon" style={{background: 'transparent', border: 'none'}} onClick={()=> {router.back()}}>
           <ChevronLeft className="text-primary"/>
         </Button>
         {isEditing ? (

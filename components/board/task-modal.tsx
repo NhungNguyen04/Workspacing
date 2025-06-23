@@ -7,13 +7,12 @@ import { useBoardStore } from "@/store/BoardStore";
 import {Activity, Calendar as CalendarIcon, Check, Layout, List, Settings, Trash, User, Plus, Link, Upload, File, ChevronUp, ChevronDown, Pencil } from "lucide-react";
 import { Textarea } from "../ui/textarea";
 import { format } from "date-fns";
-import { set } from "lodash";
 import { useUser } from "@clerk/nextjs";
 import { updateTaskDetails, deleteTask, fetchTaskLogs } from '@/lib/api/board'
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
-import { useContentStore } from "@/store/ContentStore";
 import { useCurrentIds } from "@/hooks/use-user";
-import { getTeamspaceContents } from "@/lib/api/content";
+import { TaskContent } from "./task-content";
+import { TaskMember } from "./task-member";
 
 interface AuditLog {
   id: string;
@@ -41,6 +40,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
   const [editedTitle, setEditedTitle] = useState(task?.title || "");
   const [dueDate, setDueDate] = useState<Date | null>(task.dueDate || null);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showTaskMembers, setShowTaskMembers] = useState(false);
   const [description, setDescription] = useState(task.description || "");
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -50,15 +50,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
   const { columnName } = getTaskWithColumn(task.id);
 
   const [isPersonalTask, setIsPersonalTask] = useState(Boolean(task.userId));
-  const {contents, setContents} = useContentStore();
   const {currentOrgId} = useCurrentIds();
-
-  if (!contents) {
-    if (currentOrgId) {
-      getTeamspaceContents(currentOrgId)
-        .then(setContents)
-    }
-  }
 
   useEffect(() => {
     if (isOpen && task.id) {
@@ -115,7 +107,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="min-w-[512px] max-w-[600px] max-h-[85vh] overflow-y-auto">
+        <DialogContent className="min-w-[512px] max-w-[600px] max-h-[85vh] overflow-y-auto" closeButton={false}>
           <div className="space-y-6">
               {/* Title Section */}
               <div className="space-y-2">
@@ -151,21 +143,17 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                         onChange={(e) => setDescription(e.target.value)}
                       />
                   </div>
-              </div>
-
-              {/* Contents Section */}
+              </div>              {/* Contents Section */}
               <div className="space-y-2">
                   <div className="grid grid-cols-[24px_1fr] gap-3 items-center">
                       <Link />
-                      <p className="text-lg font-bold">Attach content</p>
+                      <p className="text-lg font-bold">Linked Content</p>
                   </div>
                   <div className="grid grid-cols-[24px_1fr] gap-3">
-                      <div />
-                          <div className="flex space-x-2">
-                              <Button variant="outline" className="justify-start flex-1 w-auto">
-                                  <File className="mr-2" /> Embed teamspace content
-                              </Button>
-                          </div>
+                      <div /> 
+                      <div className="w-full">
+                          <TaskContent task={task} />
+                      </div>
                   </div>
               </div>
 
@@ -199,10 +187,16 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                                       </div>
                                   )}
                               </div>
-                              <Button variant="outline" className="justify-start flex-1">
+                              <Button variant="outline" className="justify-start flex-1" onClick={() => setShowTaskMembers(!showTaskMembers)}>
                                   <User className="mr-2" /> Assign to members
                               </Button>
-                          </div>
+                          </div>                          {showTaskMembers && (
+                            <div className="mt-2 mb-16 relative" style={{ zIndex: 60 }}>                              
+                              <TaskMember 
+                                taskId={task.id}
+                              />
+                            </div>
+                          )}
                           <div className="flex space-x-2">
                               <Button 
                                   variant={isPersonalTask ? "secondary" : "outline"} 

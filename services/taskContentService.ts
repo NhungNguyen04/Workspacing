@@ -45,3 +45,36 @@ export async function getContentTasks(contentId: string) {
     }
   });
 }
+
+export async function getAvailableContentsForTask(
+  taskId: string, 
+  userId?: string | null, 
+  teamspaceId?: string | null
+) {
+  // First, find all content IDs that are already associated with the task
+  const existingAssociations = await prisma.taskContent.findMany({
+    where: { taskId },
+    select: { contentId: true }
+  });
+  
+  const existingContentIds = existingAssociations.map(assoc => assoc.contentId);
+  
+  // Then find all contents that are not yet associated with the task
+  return await prisma.content.findMany({
+    where: {
+      AND: [
+        { 
+          OR: [
+            { userId },
+            { teamspaceId }
+          ] 
+        },
+        {
+          id: {
+            notIn: existingContentIds.length > 0 ? existingContentIds : ['']
+          }
+        }
+      ]
+    }
+  });
+}
