@@ -59,7 +59,7 @@ export default function Component() {
         userId: '', // This will be set by the server
         columnId: '', // Required by interface
         position: undefined,
-        assignedTo: [] // Add a default or appropriate value for assignedTo
+        assignedTo: [] 
       }
       setNewTasks([...newTasks, task])
       setTasks([...tasks, task])
