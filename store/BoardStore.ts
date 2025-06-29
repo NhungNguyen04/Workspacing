@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { Board } from '@/types/board'
 import { Column } from '@/types/column'
 import { Task } from '@/types/task'
+import { TaskContent } from '@/types/taskContent'
 
 interface BoardState {
   boards: Board[]

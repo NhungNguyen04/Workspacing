@@ -82,9 +82,26 @@ export function TaskMember({ taskId }: TaskMemberProps) {
           >
             {hasAssignedMembers ? (
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>
-                  {assignedTo.length} {assignedTo.length === 1 ? "member" : "members"} assigned
+                <div className="flex -space-x-1">
+                  {memberships?.data
+                    ?.filter((member: any) => assignedTo.includes(member.id))
+                    .slice(0, 3)
+                    .map((member: any) => (
+                      <Avatar key={member.id} className="h-6 w-6 border-2 border-white">
+                        <AvatarImage src={member.publicUserData.imageUrl} />
+                        <AvatarFallback className="text-xs">
+                          {member.publicUserData.firstName?.[0]}{member.publicUserData.lastName?.[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                    ))}
+                  {assignedTo.length > 3 && (
+                    <div className="h-6 w-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
+                      <span className="text-xs text-gray-600">+{assignedTo.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+                <span className="text-sm">
+                  {assignedTo.length} {assignedTo.length === 1 ? "member" : "members"}
                 </span>
               </div>
             ) : (

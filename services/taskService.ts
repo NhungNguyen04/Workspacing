@@ -107,6 +107,13 @@ export async function getTasks(userId: string, boardId?: string) {
 
   return prisma.task.findMany({
     where: whereClause,
+    include: {
+      content: {
+        include: {
+          content: true
+        }
+      }
+    },
     orderBy: [
       { columnId: 'asc' },
       { position: 'asc' }

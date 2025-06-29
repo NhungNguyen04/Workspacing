@@ -1,5 +1,6 @@
 import { Column } from './column';
 import { Content } from './content';
+import { TaskContent } from './taskContent';
 export interface Task {
   id: string;
   title: string;
@@ -15,8 +16,8 @@ export interface Task {
   columnId?: string | null;
   description?: string | null;
   position?: number | null;
-  content?: Content | null;
-  assignedTo: string[];
+  assignedTo?: string[];
+  content: TaskContent[];
 }
 
 export interface TaskWithColumn extends Task {

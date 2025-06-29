@@ -1,13 +1,18 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useBoardStore } from '@/store/BoardStore'
-import { Task } from '@/types/task'
+import { useTeamspaceContentStore } from '@/store/TeamspaceContentStore'
+import { Task, TaskWithColumn } from '@/types/task'
 import { Column } from '@/types/column'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, FileText, Users, ArrowUpDown, ArrowUp, ArrowDown, Group, List } from 'lucide-react'
+import { Calendar, FileText, Users, ArrowUpDown, ArrowUp, ArrowDown, Group, List, ChevronDown, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { Button } from '@/components/ui/button'
+import { useOrganization } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Content } from '@/types/content'
 
 interface TableViewProps {
   className?: string
@@ -21,6 +26,15 @@ export const TableView: React.FC<TableViewProps> = ({ className }) => {
   const [sortField, setSortField] = useState<SortField>('title')
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [groupByColumn, setGroupByColumn] = useState(true)
+  const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set())
+  const allContents = useTeamspaceContentStore(state => state.contents);
+  const router = useRouter();
+  const { memberships } = useOrganization({
+    memberships: {
+      infinite: true, 
+      keepPreviousData: true, 
+    },
+  })
 
   // Group tasks by columns and sort within each group
   const groupedTasks = React.useMemo(() => {
@@ -145,26 +159,125 @@ export const TableView: React.FC<TableViewProps> = ({ className }) => {
     if (!assignedTo || assignedTo.length === 0) {
       return <span className="text-gray-400 text-sm">Unassigned</span>
     }
-    
+    if (!memberships?.data || memberships.data.length === 0) {
+      // Show the user IDs if we can't load member data
+      return (
+        <div className="flex items-center gap-1">
+          <Users className="h-3 w-3 text-gray-500" />
+          <span className="text-sm">{assignedTo.length} member(s)</span>
+        </div>
+      );
+    }
+
+    const assignedMembers = memberships.data.filter((member: any) => 
+      assignedTo.includes(member.id)
+    );
+
+    if (assignedMembers.length === 0) {
+      return (
+        <div className="flex items-center gap-1">
+          <Users className="h-3 w-3 text-gray-500" />
+          <span className="text-sm">{assignedTo.length} member(s)</span>
+        </div>
+      );
+    }
+
     return (
       <div className="flex items-center gap-1">
-        <Users className="h-3 w-3 text-gray-500" />
-        <span className="text-sm">{assignedTo.length} member(s)</span>
+        <div className="flex -space-x-1">
+          {assignedMembers.slice(0, 3).map((member: any) => (
+            <Avatar key={member.id} className="h-6 w-6 border-2 border-white">
+              <AvatarImage src={member.publicUserData.imageUrl} />
+              <AvatarFallback className="text-xs">
+                {member.publicUserData.firstName?.[0]}{member.publicUserData.lastName?.[0]}
+              </AvatarFallback>
+            </Avatar>
+          ))}
+          {assignedMembers.length > 3 && (
+            <div className="h-6 w-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
+              <span className="text-xs text-gray-600">+{assignedMembers.length - 3}</span>
+            </div>
+          )}
+        </div>
+        <span className="text-sm text-gray-600 ml-1">
+          {assignedMembers.length} member{assignedMembers.length !== 1 ? 's' : ''}
+        </span>
       </div>
-    )
+    );
   }
 
   const getContentDisplay = (task: Task) => {
-    if (task.content) {
+    if (!task.content || task.content.length === 0) {
       return (
-        <div className="flex items-center gap-1 text-green-600">
+        <div className="flex items-center gap-1 text-gray-400">
           <FileText className="h-3 w-3" />
-          <span className="text-sm">Has content</span>
+          <span className="text-xs">No content</span>
         </div>
       )
     }
-    return <span className="text-gray-400 text-sm">No content</span>
-  }
+    
+    const contentCount = task.content.length;
+    
+    if (contentCount === 1) {
+      const content = task.content[0].content;
+      return (
+        <div 
+          className="flex items-center gap-2 p-2 rounded-md bg-green-50 hover:bg-green-100 cursor-pointer transition-colors group"
+          onClick={() => router.push(`/contents/${content.id}`)}
+        >
+          <FileText className="h-3 w-3 text-green-600 flex-shrink-0" />
+          <span className="text-xs text-green-700 truncate max-w-32 group-hover:text-green-800">
+            {content.title}
+          </span>
+        </div>
+      )
+    }
+
+    // Multiple contents - show count with dropdown-like indicator
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 p-1.5 rounded-md bg-gray-100 hover:bg-gray-200 cursor-pointer transition-colors">
+          <FileText className="h-3 w-3 text-gray-600" />
+          <span className="text-xs text-gray-700 font-medium">
+            {contentCount}
+          </span>
+        </div>
+        <div className="flex -space-x-1">
+          {task.content.slice(0, 2).map((taskContentItem, index) => (
+            <div
+              key={taskContentItem.content.id}
+              className="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-purple-500 border-2 border-white flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+              onClick={() => router.push(`/contents/${taskContentItem.content.id}`)}
+              title={taskContentItem.content.title}
+            >
+              <FileText className="h-2.5 w-2.5 text-white" />
+            </div>
+          ))}
+          {contentCount > 2 && (
+            <div className="w-6 h-6 rounded-full bg-gray-300 border-2 border-white flex items-center justify-center">
+              <span className="text-xs text-gray-600 font-medium">+{contentCount - 2}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  };
+
+  const toggleColumnCollapse = (columnId: string) => {
+    setCollapsedColumns(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(columnId)) {
+        newSet.delete(columnId)
+      } else {
+        newSet.add(columnId)
+      }
+      return newSet
+    })
+  };
+
+  const isColumnCollapsed = (columnId: string) => {
+    return collapsedColumns.has(columnId)
+  };
 
   return (
     <div className={`bg-white rounded-lg shadow-sm border ${className}`}>
@@ -228,7 +341,7 @@ export const TableView: React.FC<TableViewProps> = ({ className }) => {
                   {getSortIcon('assignedTo')}
                 </Button>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                 Content
               </th>
               <th className="px-6 py-3 text-left">
@@ -255,31 +368,45 @@ export const TableView: React.FC<TableViewProps> = ({ className }) => {
               groupedTasks.map((group) => (
                 <React.Fragment key={group.column.id}>
                   {/* Column Header Row */}
-                  <tr className="bg-blue-50 border-t-2 border-blue-200">
+                  <tr className=" border-t-2">
                     <td colSpan={5} className="px-6 py-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="default" className="bg-blue-100 text-blue-800 border-blue-300">
-                          {group.column.title}
-                        </Badge>
-                        <span className="text-sm text-gray-600">
-                          ({group.tasks.length} task{group.tasks.length !== 1 ? 's' : ''})
-                        </span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleColumnCollapse(group.column.id)}
+                            className="h-6 w-6 p-0 hover:bg-green-200"
+                          >
+                            {isColumnCollapsed(group.column.id) ? (
+                              <ChevronRight className="h-4 w-4 text-green-600" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-green-600" />
+                            )}
+                          </Button>
+                          <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
+                            {group.column.title}
+                          </Badge>
+                          <span className="text-sm text-gray-600">
+                            ({group.tasks.length} task{group.tasks.length !== 1 ? 's' : ''})
+                          </span>
+                        </div>
+                        {isColumnCollapsed(group.column.id) && (
+                          <span className="text-xs text-gray-500 italic">
+                            Click to expand
+                          </span>
+                        )}
                       </div>
                     </td>
                   </tr>
                   {/* Tasks for this column */}
-                  {group.tasks.map((task: Task & { columnTitle: string }) => (
+                  {!isColumnCollapsed(group.column.id) && group.tasks.map((task: Task & { columnTitle: string }) => (
                     <tr key={task.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
                           <div className="text-sm font-medium text-gray-900 max-w-xs">
                             {task.title}
                           </div>
-                          {task.description && (
-                            <div className="text-xs text-gray-500 mt-1 truncate max-w-xs">
-                              {task.description}
-                            </div>
-                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -288,9 +415,9 @@ export const TableView: React.FC<TableViewProps> = ({ className }) => {
                         </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getAssignedMembersDisplay(task.assignedTo)}
+                        {getAssignedMembersDisplay(task.assignedTo ?? [])}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4 w-32">
                         {getContentDisplay(task)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -327,9 +454,9 @@ export const TableView: React.FC<TableViewProps> = ({ className }) => {
                     </Badge>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {getAssignedMembersDisplay(task.assignedTo)}
+                    {getAssignedMembersDisplay(task.assignedTo ?? [])}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 w-32">
                     {getContentDisplay(task)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

@@ -23,6 +23,8 @@ import { getTeamspaceContents } from '@/lib/api/content';
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { Task } from '@/types/task';
+import type { TaskContent as TaskContentType } from '@/types/taskContent';
+import { update } from 'lodash';
 
 interface TaskContentProps {
   task: Task;
@@ -44,6 +46,8 @@ export const TaskContent = ({ task }: TaskContentProps) => {
   const setCurrentTeamspaceId = useTeamspaceContentStore(state => state.setCurrentTeamspaceId);
   const {orgId} = useAuth();
   const router = useRouter();
+  const { tasks } = useBoardStore();
+  const updateTask = useBoardStore(state => state.updateTask);
 
   useEffect(() => {
     const fetchContents = async () => {
@@ -70,22 +74,11 @@ export const TaskContent = ({ task }: TaskContentProps) => {
     };
 
     fetchContents();
+    fetchTaskContents();
   }, [currentTeamspaceId, contentsLoaded]);
 
-  const fetchTaskContents = async () => {
-    try {
-      setIsLoading(true);
-      const contents = await getTaskContents(task.id);
-      setLinkedContents(contents.map((tc: any) => tc.content));
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load task contents",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const fetchTaskContents =  () => {
+    setLinkedContents(task.content?.map(tc => tc.content) || []);
   };
 
   // Get available contents that are not linked to this task
@@ -93,16 +86,6 @@ export const TaskContent = ({ task }: TaskContentProps) => {
     const linkedContentIds = linkedContents.map(content => content.id);
     setAvailableContents(allContents.filter(content => !linkedContentIds.includes(content.id)));
   };
-
-  useEffect(() => {
-    if (task.content) {
-      setIsLoading(false)
-      return
-    }
-    if (task.id) {
-      fetchTaskContents();
-    }
-  }, [task]);
 
   // Update available contents whenever linked contents or all contents change
   useEffect(() => {
@@ -120,10 +103,16 @@ export const TaskContent = ({ task }: TaskContentProps) => {
       // Optimistic update
       setLinkedContents(prev => [...prev, contentToAdd]);
       setIsDialogOpen(false);
+      const taskContentRelation = await addContentToTask(task.id, contentId);
+      console.log("Created task content relation:", taskContentRelation);
       
-      // Update in database
-      await addContentToTask(task.id, contentId);
-      
+      // Update the task with the new content relationship
+      const updatedContent = [...(task.content || []), taskContentRelation];
+      updateTask(task.id, {
+        content: updatedContent
+      });
+
+      console.log("Updated task content:", tasks);
       toast({
         title: "Success",
         description: "Content added to task",
@@ -144,13 +133,14 @@ export const TaskContent = ({ task }: TaskContentProps) => {
   const handleRemoveContent = async (contentId: string) => {
     try {
       setIsLoading(true);
-      
-      // Optimistic update - remove from UI immediately
       setLinkedContents(prev => prev.filter(content => content.id !== contentId));
-      
-      // Update in database
       await removeContentFromTask(task.id, contentId);
       
+      // Update the task by removing the content relationship
+      const updatedContent = (task.content || []).filter((tc: TaskContentType) => tc.content.id !== contentId);
+      updateTask(task.id, {
+        content: updatedContent
+      });
       toast({
         title: "Success",
         description: "Content removed from task",

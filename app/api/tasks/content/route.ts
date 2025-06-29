@@ -48,12 +48,15 @@ export async function POST(
 
     if (!content) {
       return new NextResponse("Content not found or unauthorized", { status: 404 });
-    }    // Create the relationship
+    }
+
+    // Create the relationship
     const taskContent = await taskContentService.addContentToTask(taskId, contentId);
 
     return NextResponse.json(taskContent);
   } catch (error) {
-    console.error("[TASK_CONTENT_POST]", error);
+    // Fix the error logging issue
+    console.error("[TASK_CONTENT_POST]", error instanceof Error ? error.message : String(error));
     return new NextResponse("Internal error", { status: 500 });
   }
 }
@@ -87,12 +90,14 @@ export async function DELETE(
 
     if (!task) {
       return new NextResponse("Task not found or unauthorized", { status: 404 });
-    }    // Delete the relationship
+    }
+
+    // Delete the relationship
     await taskContentService.removeContentFromTask(taskId, contentId);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[TASK_CONTENT_DELETE]", error);
+    console.error("[TASK_CONTENT_DELETE]", error instanceof Error ? error.message : String(error));
     return new NextResponse("Internal error", { status: 500 });
   }
 }
@@ -127,11 +132,13 @@ export async function GET(
 
     if (!task) {
       return new NextResponse("Task not found or unauthorized", { status: 404 });
-    }    const taskContents = await taskContentService.getTaskContents(taskId);
+    }
+
+    const taskContents = await taskContentService.getTaskContents(taskId);
 
     return NextResponse.json(taskContents);
   } catch (error) {
-    console.error("[TASK_CONTENT_GET]", error);
+    console.error("[TASK_CONTENT_GET]", error instanceof Error ? error.message : String(error));
     return new NextResponse("Internal error", { status: 500 });
   }
 }

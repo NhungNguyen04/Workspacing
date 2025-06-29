@@ -51,7 +51,9 @@ export default function ColumnComponent({ column, index, onAddTask }: ColumnProp
         >
           <div {...provided.dragHandleProps} className="pt-2 px-2">
             <ColumnHeader data={column} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-            {!isCollapsed && (
+          </div>
+          {!isCollapsed && (
+            <div className="px-2 mt-2">
               <Droppable droppableId={column.id} type="task">
                 {(provided) => (
                   <div
@@ -104,8 +106,8 @@ export default function ColumnComponent({ column, index, onAddTask }: ColumnProp
                   </div>
                 )}
               </Droppable>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </Draggable>
