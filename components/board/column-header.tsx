@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useBoardStore } from "@/store/BoardStore";
 import { toast } from "react-toastify";
 import { updateColumnTitle, deleteColumn } from "@/lib/api/board";
-import { MoreHorizontal, X } from "lucide-react";
+import { ListCollapse, Minimize, MoreHorizontal, X } from "lucide-react";
 import {
     Popover,
     PopoverContent,
@@ -20,18 +20,20 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { FaWindowMinimize } from "react-icons/fa";
 
 interface ColumnHeaderProps {
     data: Column
+    isCollapsed?: boolean;
+    setIsCollapsed?: (collapsed: boolean) => void;
 }
 
-export const ColumnHeader = ({ data }: ColumnHeaderProps) => {
+export const ColumnHeader = ({ data, isCollapsed, setIsCollapsed }: ColumnHeaderProps) => {
     const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState(data.title);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const { updateColumnById, removeColumn } = useBoardStore();
     const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-
     const enableEditing = () => {
         setIsEditing(true);
     };
@@ -107,31 +109,42 @@ export const ColumnHeader = ({ data }: ColumnHeaderProps) => {
                     />
                 ) : (
                     <>
-                        <div 
-                            onClick={enableEditing}
-                            className="w-full text-md px-2.5 py-1 h-7 font-bold border-transparent cursor-pointer"
+                        {!isCollapsed && (
+                            <div 
+                                onClick={enableEditing}
+                                className="w-full text-md px-2.5 py-1 h-7 font-bold border-transparent cursor-pointer"
+                            >
+                                {title}
+                            </div>
+                        )}
+                        <Button
+                            variant="ghost"
+                            className="h-auto w-auto p-2"
+                            onClick={() => setIsCollapsed && setIsCollapsed(!isCollapsed)}
                         >
-                            {title}
-                        </div>
-                        <Popover onOpenChange={setIsPopoverOpen}>
-                            <PopoverTrigger asChild>
-                                <Button variant="ghost" className="h-auto w-auto p-2">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="px-0 pt-3 pb-3" side="bottom" align="start">
-                                <div className="text-sm">
-                                    <Button
-                                        variant="ghost"
-                                        onClick={() => setShowDeleteDialog(true)}
-                                        className="w-full justify-start text-destructive"
-                                    >
-                                        <X className="h-4 w-4 mr-2" />
-                                        Delete Column
+                            <Minimize className={`transform transition-transform duration-200 ${isCollapsed ? 'rotate-90' : ''}`} />
+                        </Button>
+                        {!isCollapsed && (
+                            <Popover onOpenChange={setIsPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button variant="ghost" className="h-auto w-auto p-2">
+                                        <MoreHorizontal className="h-4 w-4" />
                                     </Button>
-                                </div>
-                            </PopoverContent>
-                        </Popover>
+                                </PopoverTrigger>
+                                <PopoverContent className="px-0 pt-3 pb-3" side="bottom" align="start">
+                                    <div className="text-sm">
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => setShowDeleteDialog(true)}
+                                            className="w-full justify-start text-destructive"
+                                        >
+                                            <X className="h-4 w-4 mr-2" />
+                                            Delete Column
+                                        </Button>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+                        )}
                     </>
                 )}
             </div>

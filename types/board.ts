@@ -10,4 +10,5 @@ export interface Board {
   createdAt: Date;
   updatedAt: Date;
   columns?: Column[];
+  starred?: boolean; 
 }

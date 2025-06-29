@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import BoardHeader from './board-header'
 import { Task } from '@/types/task'
 import ColumnComponent from './column'
+import { TableView } from './table-view'
 import { useBoardStore } from '@/store/BoardStore'
 import {toast} from "react-toastify"
 import 'react-toastify/dist/ReactToastify.css'
@@ -23,7 +24,8 @@ export const BoardInterface: React.FC = () => {
     addColumn,
     tasks,
     setTasks,
-    addTask
+    addTask,
+    viewMode
   } = useBoardStore()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -271,69 +273,73 @@ export const BoardInterface: React.FC = () => {
   return (
     <div>
       <BoardHeader/>
-      <div className="m-10 mt-0">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="board" type="column" direction="horizontal">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="flex gap-4"
-              >
-                {columns?.map((column, index) => (
-                  <ColumnComponent
-                    key={column.id}
-                    column={column}
-                    index={index}
-                    onAddTask={handleAddTask}
-                  />
-                ))}
-                {provided.placeholder}
-                <div className='flex h-fit w-[272px] items-center justify-center gap-2 bg-white rounded-md mr-10'>
-                  {!isEditing ? (
-                    <Button
-                      onClick={() => setIsEditing(true)}
-                      variant="outline"
-                      className="w-full h-auto"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Add Column
-                    </Button>
-                  ) : (
-                    <div className='flex-1'>
-                      <Input
-                        className='w-[96%] ml-[2%] mt-2 h-7 p-4'
-                        placeholder='Enter column name'
-                        value={newColumnTitle || ''}
-                        onChange={(e) => setNewColumnTitle(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        autoFocus
-                      />
-                      <div className='float-right mt-2 mb-2 flex flex-row'>
-                        <Button 
-                          onClick={() => {
-                            setNewColumnTitle("");
-                            setIsEditing(false);
-                          }}
-                          variant='ghost'
-                        >
-                          <X/>
-                        </Button>
-                        <Button
-                          onClick={handleAddColumn}
-                          className='bg-secondary text-primary mr-2'
-                          disabled={isColumnLoading}
-                        >
-                          {isColumnLoading ? 'Adding...' : 'Add'}
-                        </Button>
+      <div className="m-4">
+        {viewMode === 'table' ? (
+          <TableView />
+        ) : (
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="board" type="column" direction="horizontal">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="flex gap-4"
+                >
+                  {columns?.map((column, index) => (
+                    <ColumnComponent
+                      key={column.id}
+                      column={column}
+                      index={index}
+                      onAddTask={handleAddTask}
+                    />
+                  ))}
+                  {provided.placeholder}
+                  <div className='flex h-fit w-[272px] items-center justify-center gap-2 bg-white rounded-md mr-10'>
+                    {!isEditing ? (
+                      <Button
+                        onClick={() => setIsEditing(true)}
+                        variant="outline"
+                        className="w-full h-auto"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Column
+                      </Button>
+                    ) : (
+                      <div className='flex-1'>
+                        <Input
+                          className='w-[96%] ml-[2%] mt-2 h-7 p-4'
+                          placeholder='Enter column name'
+                          value={newColumnTitle || ''}
+                          onChange={(e) => setNewColumnTitle(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          autoFocus
+                        />
+                        <div className='float-right mt-2 mb-2 flex flex-row'>
+                          <Button 
+                            onClick={() => {
+                              setNewColumnTitle("");
+                              setIsEditing(false);
+                            }}
+                            variant='ghost'
+                          >
+                            <X/>
+                          </Button>
+                          <Button
+                            onClick={handleAddColumn}
+                            className='bg-secondary text-primary mr-2'
+                            disabled={isColumnLoading}
+                          >
+                            {isColumnLoading ? 'Adding...' : 'Add'}
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+              )}
+            </Droppable>
+          </DragDropContext>
+        )}
       </div>
     </div>
   )

@@ -126,3 +126,32 @@ export async function deleteBoard(id: string): Promise<Board> {
   } as Board;
 }
 
+export async function toggleStarBoard(boardId: string): Promise<Board> {
+  // First, get the current value of 'starred'
+  const board = await prisma.board.findUnique({
+    where: { id: boardId },
+    include: {
+      columns: true
+    }
+  });
+
+  if (!board) {
+    throw new Error('Board not found');
+  }
+
+  const updatedBoard = await prisma.board.update({
+    where: { id: boardId },
+    data: {
+      starred: !board.starred
+    },
+    include: {
+      columns: true
+    }
+  });
+
+  return {
+    ...updatedBoard,
+    imageThumbUrl: updatedBoard.imageThumbUrl || "",
+    imageFullUrl: updatedBoard.imageFullUrl || "",
+  } as Board;
+}

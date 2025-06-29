@@ -90,3 +90,15 @@ export async function fetchImages() {
     return null;
   }
 }
+
+export async function toggleStarBoard(boardId: string) {
+  const response = await fetch(`/api/teamspace/boards/${boardId}/star`, {
+    method: 'PUT',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to toggle star status');
+  }
+
+  return response.json();
+}

@@ -12,8 +12,11 @@ interface BoardState {
   columns: Column[]
   tasks: Task[]
   tasksByColumn: Record<string, Task[]>
+  viewMode: 'board' | 'table'
+  starredBoards: Board[]
   
   setBoards: (boards: Board[]) => void
+  setStarredBoards: (boards: Board[]) => void
   setActiveBoard: (board: Board | null) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
@@ -42,6 +45,10 @@ interface BoardState {
   getTaskWithColumn: (taskId: string) => { task: Task | null, columnName: string | null }
   deleteTaskFromColumn: (taskId: string, columnId: string) => void
   updateTask: (taskId: string, updates: Partial<Task>) => void
+  setViewMode: (mode: 'board' | 'table') => void
+  toggleViewMode: () => void
+  addStarredBoard: (board: Board) => void
+  removeStarredBoard: (boardId: string) => void
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -53,8 +60,11 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   columns: [],
   tasks: [],
   tasksByColumn: {},
+  viewMode: 'board',
+  starredBoards: [],
   
   setBoards: (boards) => set({ boards }),
+  setStarredBoards: (boards) => set({ starredBoards: boards }),
   setActiveBoard: (board) => set({ activeBoard: board }),
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
@@ -98,6 +108,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
     return { columns: newColumns };
   }),
+
 
   moveColumn: (columnId: string, newIndex: number) => set((state) => {
     const columns = [...state.columns];
@@ -262,4 +273,16 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     }))
   })),
 
+  setViewMode: (mode) => set({ viewMode: mode }),
+  toggleViewMode: () => set((state) => ({ 
+    viewMode: state.viewMode === 'board' ? 'table' : 'board' 
+  })),
+
+  addStarredBoard: (board) => set((state) => ({
+    starredBoards: [...state.starredBoards, board]
+  })),
+
+  removeStarredBoard: (boardId) => set((state) => ({
+    starredBoards: state.starredBoards.filter(board => board.id !== boardId)
+  }))
 }));

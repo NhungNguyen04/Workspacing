@@ -1,5 +1,5 @@
 import {Button} from "@/components/ui/button";
-import { ChevronLeft, UserIcon, Sparkles, Loader2 } from "lucide-react";
+import { ChevronLeft, UserIcon, Sparkles, Loader2, Table, Layout } from "lucide-react";
 import { useBoardStore } from "@/store/BoardStore";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -96,7 +96,7 @@ const AIPreview = ({ columns, onAccept, onDiscard, isApplying, progress }: AIPre
 );
 
 export default function BoardHeader() {
-  const {activeBoard, previousUrl} = useBoardStore();
+  const {activeBoard, previousUrl, viewMode, toggleViewMode} = useBoardStore();
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(activeBoard?.title);
   const [showAIInput, setShowAIInput] = useState(false);
@@ -194,86 +194,106 @@ export default function BoardHeader() {
   };
 
   return (
-    <div className="flex-1">
-      <div className="h-16 w-full bg-white bg-opacity-80 pl-4 mb-4 items-center flex border border-transparent border-t-0 border-l-0 border-r-0 border-b-4 border-b-gradient-to-r from-green-200 via-blue-200 to-blue-500 shadow-lg shadow-gray-300/50">
-        <Button variant="outline" size="icon" style={{background: 'transparent', border: 'none'}} onClick={()=> {router.back()}}>
-          <ChevronLeft className="text-primary"/>
-        </Button>
-        {isEditing ? (
-            <input
-                className="w-fit text-lg px-2.5 py-1 h-7 font-medium border rounded bg-white"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={onBlur}
-                onKeyDown={onKeyDown}
-                autoFocus
-            />
-            ) : (
-              <div onClick={enableEditing} className="flex items-center cursor-pointer">
-                <h1 className="text-2xl font-bold text-primary ml-4">{title}</h1>
-              </div>)}
-        <div className="flex space-x-2 ml-auto pr-4">
-          <Button style={{ background: 'transparent', color: 'black' }}>Invite</Button>
-          <Button style={{ background: 'transparent', color: 'black' }}>Settings</Button>
-        </div>
-      </div>
-      <div className="flex items-center justify-center px-5 md:py-8">
-        {!showAIInput && !isGenerating && (
-          <Button 
-            className="group relative overflow-hidden h-14 w-auto hover:scale-105 transform transition-all duration-200 text-primary font-medium px-8 py-3 rounded-xl flex items-center gap-3 shadow-lg hover:shadow-primary/25 hover:text-secondary bg-secondary"
-            onClick={() => setShowAIInput(true)}
-          >
-            <Sparkles className="w-5 h-5 animate-pulse" />
-            <span className="relative z-10 font-bold text-lg">Create with GPT</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/40 to-blue-600/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </Button>
+    <div className="flex-1 flex flex-col items-center">
+      <div className="fixed top-0 left-0 w-full h-14 bg-white bg-opacity-80 pl-4 items-center flex border border-transparent border-t-0 border-l-0 border-r-0 border-b-4 border-b-gradient-to-r from-green-200 via-blue-200 to-blue-500 shadow-lg shadow-gray-300/50 z-40">
+      <Button variant="outline" size="icon" style={{background: 'transparent', border: 'none'}} onClick={()=> {router.back()}}>
+        <ChevronLeft className="text-primary"/>
+      </Button>
+      {isEditing ? (
+      <input
+        className="w-fit text-lg px-2.5 py-1 h-7 font-medium border rounded bg-white"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        autoFocus
+      />
+      ) : (
+        <div onClick={enableEditing} className="flex items-center cursor-pointer w-auto mr-10">
+        <h1 className="text-2xl font-bold text-primary ml-4">{title}</h1>
+        </div>)}
+      
+      {/* View Toggle Button */}
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={toggleViewMode}
+        className="ml-4 flex items-center gap-2 hover:bg-gray-100 transition-colors"
+        title={`Switch to ${viewMode === 'board' ? 'table' : 'board'} view`}
+      >
+        {viewMode === 'board' ? (
+          <>
+            <Table className="h-4 w-4" />
+            <span className="hidden sm:inline">Table View</span>
+          </>
+        ) : (
+          <>
+            <Layout className="h-4 w-4" />
+            <span className="hidden sm:inline">Board View</span>
+          </>
         )}
-        
-        {showAIInput && !isGenerating && (
-          <div className="flex gap-3 items-center bg-white p-2 rounded-xl shadow-xl border border-gray-100 w-full max-w-2xl transform transition-all duration-200 hover:shadow-2xl">
-            <input
-              type="text"
-              value={requirement}
-              onChange={(e) => setRequirement(e.target.value)}
-              placeholder="Describe your project requirements..."
-              className="p-4 border rounded-xl w-full focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base placeholder:text-gray-400"
-            />
-            <Button 
-              onClick={handleAIGenerate}
-              className="bg-primary hover:bg-primary/90 text-white px-8 py-6 rounded-xl flex items-center gap-2 transition-all duration-200 hover:scale-105"
-            >
-              <Sparkles className="w-4 h-4" />
-              Generate
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowAIInput(false)}
-              className="hover:bg-red-50 px-6 py-6 rounded-xl border-2 transition-colors duration-200"
-            >
-              Cancel
-            </Button>
-          </div>
-        )}
+      </Button>
 
-        {isGenerating && (
-          <div className="flex items-center gap-4 p-8 text-base font-medium rounded-xl bg-white shadow-xl border border-gray-100 animate-pulse transition-all duration-300">
-            <div className="relative">
-              <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-full blur opacity-30 animate-pulse"></div>
-              <Loader2 className="w-6 h-6 animate-spin text-primary relative"/>
-            </div>
-            <p className="text-primary">GPT is crafting your project structure...</p>
-          </div>
-        )}
+      <div className="flex space-x-2 ml-auto pr-4">
+         <Button 
+      className="group relative overflow-hidden h-10 w-auto hover:scale-105 transform transition-all duration-200 text-primary font-medium px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg hover:shadow-primary/25 hover:text-secondary bg-secondary"
+      onClick={() => setShowAIInput(true)}
+        >
+      <Sparkles className="w-3 h-3 animate-pulse" />
+      <span className="relative z-10 font-bold text-md">Create with GPT</span>
+      <div className="absolute inset-0 bg-gradient-to-r from-primary/40 to-blue-600/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        </Button>
+        <Button style={{ background: 'transparent', color: 'black' }}>Invite</Button>
+        <Button style={{ background: 'transparent', color: 'black' }}>Settings</Button>
+      </div>
+      </div>
+      <div className="flex items-center justify-center md:py-8 w-full">
+      
+      {showAIInput && !isGenerating && (
+        <div className="flex gap-3 items-center bg-gray-400/50 p-2 rounded-xl shadow-xl border border-gray-100 w-full h-16 max-w-2xl transform transition-all duration-200 hover:shadow-2xl z-50 justify-center mx-auto">
+        <input
+          type="text"
+          value={requirement}
+          onChange={(e) => setRequirement(e.target.value)}
+          placeholder="Describe your project requirements..."
+          className="p-4 border rounded-xl w-full h-12 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-base placeholder:text-gray-400"
+        />
+        <Button 
+          onClick={handleAIGenerate}
+          className="bg-primary hover:bg-primary/90 text-white px-6 py-4 rounded-xl flex items-center gap-2 transition-all duration-200 hover:scale-105"
+        >
+          <Sparkles className="w-2 h-2" />
+          Generate
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={() => setShowAIInput(false)}
+          className="hover:bg-red-50 px-6 py-4 rounded-xl border-2 transition-colors duration-200"
+        >
+          Cancel
+        </Button>
+        </div>
+      )}
+
+      {isGenerating && (
+        <div className="flex items-center gap-4 p-8 text-base font-medium rounded-xl bg-white shadow-xl border border-gray-100 animate-pulse transition-all duration-300 justify-center mx-auto z-50">
+        <div className="relative">
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary to-blue-600 rounded-full blur opacity-30 animate-pulse"></div>
+          <Loader2 className="w-6 h-6 animate-spin text-primary relative"/>
+        </div>
+        <p className="text-primary">GPT is crafting your project structure...</p>
+        </div>
+      )}
       </div>
       
       {aiGeneratedData && (
-        <AIPreview 
-          columns={aiGeneratedData.columns}
-          onAccept={handleAcceptChanges}
-          onDiscard={handleDiscardChanges}
-          isApplying={isApplyingChanges}
-          progress={progress}
-        />
+      <AIPreview 
+        columns={aiGeneratedData.columns}
+        onAccept={handleAcceptChanges}
+        onDiscard={handleDiscardChanges}
+        isApplying={isApplyingChanges}
+        progress={progress}
+      />
       )}
     </div>
   )

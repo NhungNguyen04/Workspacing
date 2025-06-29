@@ -23,6 +23,7 @@ model Board {
   color String
   imageThumbUrl String @default("")
   imageFullUrl String @default("")
+  starred Boolean @default(false)
   
   @@index([teamspaceId])
 }

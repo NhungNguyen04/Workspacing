@@ -119,7 +119,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                               suppressContentEditableWarning
                               onBlur={(e) => setEditedTitle(e.currentTarget.textContent || "")}
                               onInput={(e) => setEditedTitle(e.currentTarget.textContent || "")}
-                              className="outline-none border-b border-transparent hover:border-gray-300 focus:border-gray-300 transition-colors text-lg font-bold flex justify-start items-center"
+                              className="outline-none border-b border-transparent hover:border-gray-300 focus:border-gray-300 transition-colors text-md font-bold flex justify-start items-center"
                             >
                               {task.title}
                               <Pencil className="text-gray-500 ml-2 w-5 h-5" />
@@ -133,7 +133,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               <div className="space-y-2">
                   <div className="grid grid-cols-[24px_1fr] gap-3 items-center">
                       <List />
-                      <p className="text-lg font-bold">Description</p>
+                      <p className="text-md font-bold">Description</p>
                   </div>
                   <div className="grid grid-cols-[24px_1fr] gap-3">
                       <div />
@@ -147,7 +147,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               <div className="space-y-2">
                   <div className="grid grid-cols-[24px_1fr] gap-3 items-center">
                       <Link />
-                      <p className="text-lg font-bold">Linked Content</p>
+                      <p className="text-md font-bold">Linked Content</p>
                   </div>
                   <div className="grid grid-cols-[24px_1fr] gap-3">
                       <div /> 
@@ -161,7 +161,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               <div className="space-y-2">
                   <div className="grid grid-cols-[24px_1fr] gap-3 items-center">
                       <Settings />
-                      <p className="text-lg font-bold">Actions</p>
+                      <p className="text-md font-bold">Actions</p>
                   </div>
                   <div className="grid grid-cols-[24px_1fr] gap-3">
                       <div />
@@ -230,7 +230,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                 <div className="grid grid-cols-[24px_1fr] gap-3 items-center">
                     <Activity />
                     <div className="flex items-center gap-2">
-                      <p className="text-lg font-bold">Activity</p>
+                      <p className="text-md font-bold">Activity</p>
                       <Button
                         variant="outline"
                         size="sm"
