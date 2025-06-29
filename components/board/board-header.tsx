@@ -1,5 +1,5 @@
 import {Button} from "@/components/ui/button";
-import { ChevronLeft, UserIcon, Sparkles, Loader2, Table, Layout } from "lucide-react";
+import { ChevronLeft, UserIcon, Sparkles, Loader2, Table, Layout, Filter, X } from "lucide-react";
 import { useBoardStore } from "@/store/BoardStore";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -9,6 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { FaRegObjectUngroup } from "react-icons/fa";
 import { Card, CardContent } from "../ui/card";
 import { Progress } from "@/components/ui/progress";
+import { FilterDialog } from "./filter-dialog";
 
 interface AIPreviewProps {
   columns: Array<{
@@ -96,7 +97,7 @@ const AIPreview = ({ columns, onAccept, onDiscard, isApplying, progress }: AIPre
 );
 
 export default function BoardHeader() {
-  const {activeBoard, previousUrl, viewMode, toggleViewMode} = useBoardStore();
+  const {activeBoard, previousUrl, viewMode, toggleViewMode, columns, tasks, originalColumns, originalTasks, isFiltered, applyFilter, clearFilter} = useBoardStore();
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(activeBoard?.title);
   const [showAIInput, setShowAIInput] = useState(false);
@@ -105,6 +106,7 @@ export default function BoardHeader() {
   const [aiGeneratedData, setAiGeneratedData] = useState<BoardData | null>(null);
   const [isApplyingChanges, setIsApplyingChanges] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [showFilterDialog, setShowFilterDialog] = useState(false);
   const router = useRouter();
   const { bulkAddColumns, bulkAddTasks } = useBoardStore();
 
@@ -193,6 +195,21 @@ export default function BoardHeader() {
     toast.info("Changes discarded");
   };
 
+  const handleFilter = (filteredTasks: any[], filteredColumns: any[]) => {
+    applyFilter(filteredColumns, filteredTasks);
+    // Don't close dialog - keep it open for real-time filtering
+  };
+
+  const handleClearFilters = () => {
+    clearFilter();
+    setShowFilterDialog(false);
+  };
+
+  const handleClearFiltersFromDialog = () => {
+    clearFilter();
+    // Don't close the dialog when clearing from within the dialog
+  };
+
   return (
     <div className="flex-1 flex flex-col items-center">
       <div className="fixed top-0 left-0 w-full h-14 bg-white bg-opacity-80 pl-4 items-center flex border border-transparent border-t-0 border-l-0 border-r-0 border-b-4 border-b-gradient-to-r from-green-200 via-blue-200 to-blue-500 shadow-lg shadow-gray-300/50 z-40">
@@ -210,7 +227,7 @@ export default function BoardHeader() {
       />
       ) : (
         <div onClick={enableEditing} className="flex items-center cursor-pointer w-auto mr-10">
-        <h1 className="text-2xl font-bold text-primary ml-4">{title}</h1>
+        <h1 className="text-xl font-semibold text-primary ml-4">{title}</h1>
         </div>)}
       
       {/* View Toggle Button */}
@@ -243,8 +260,32 @@ export default function BoardHeader() {
       <span className="relative z-10 font-bold text-md">Create with GPT</span>
       <div className="absolute inset-0 bg-gradient-to-r from-primary/40 to-blue-600/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </Button>
-        <Button style={{ background: 'transparent', color: 'black' }}>Invite</Button>
-        <Button style={{ background: 'transparent', color: 'black' }}>Settings</Button>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant={isFiltered ? "default" : "outline"}
+            onClick={() => setShowFilterDialog(true)}
+            className="flex items-center gap-2 hover:bg-gray-100 transition-colors"
+          >
+            <Filter className="h-4 w-4" />
+            Filter
+            {isFiltered && <span className="bg-primary/20 text-primary text-xs px-1.5 py-0.5 rounded">ON</span>}
+          </Button>
+          
+          {isFiltered && (
+            <Button 
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                clearFilter();
+                toast.info("Filters cleared");
+              }}
+              className="px-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </div>
       </div>
       <div className="flex items-center justify-center md:py-8 w-full">
@@ -295,6 +336,15 @@ export default function BoardHeader() {
         progress={progress}
       />
       )}
+
+      <FilterDialog
+        isOpen={showFilterDialog}
+        onClose={() => setShowFilterDialog(false)}
+        tasks={originalTasks.length > 0 ? originalTasks : tasks}
+        columns={originalColumns.length > 0 ? originalColumns : columns}
+        onFilter={handleFilter}
+        onClearFilters={handleClearFiltersFromDialog}
+      />
     </div>
   )
 }

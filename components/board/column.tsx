@@ -47,7 +47,8 @@ export default function ColumnComponent({ column, index, onAddTask }: ColumnProp
           className={`${isCollapsed ? 'w-[40px]' : 'w-[284px]'} h-fit shrink-0 bg-slate-100 bg-opacity-95 rounded-md pb-2 transition-all duration-200
             ${snapshot.isDragging ? 'ring-2 ring-primary ring-offset-2 ring-green-300' : ''}
             hover:ring-2 hover:ring-green-300 hover:ring-offset-2
-            active:ring-2 active:ring-green-300 active:ring-offset-2`}
+            active:ring-2 active:ring-green-300 active:ring-offset-2`
+            }
         >
           <div {...provided.dragHandleProps} className="pt-2 px-2">
             <ColumnHeader data={column} isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />

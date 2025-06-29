@@ -25,7 +25,8 @@ export const BoardInterface: React.FC = () => {
     tasks,
     setTasks,
     addTask,
-    viewMode
+    viewMode,
+    setOriginalData
   } = useBoardStore()
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -48,8 +49,8 @@ export const BoardInterface: React.FC = () => {
             .sort((a, b) => (a.position || 0) - (b.position || 0))
         }));
         
-        setColumns(updatedColumns);
-        setTasks(tasksData);
+        // Set original data for filtering
+        setOriginalData(updatedColumns, tasksData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
@@ -199,7 +200,8 @@ export const BoardInterface: React.FC = () => {
       createdAt: new Date(),
       updatedAt: new Date(),
       assignedTo: [],
-      description: null
+      description: null,
+      content: []
     };
   
     // Optimistic update

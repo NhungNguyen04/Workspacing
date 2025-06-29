@@ -70,6 +70,7 @@ export function TaskMember({ taskId }: TaskMemberProps) {
   };
 
   const hasAssignedMembers = assignedTo.length > 0;
+  console.log("memberships", memberships?.data);
 
   return (
     <div className="relative w-full">

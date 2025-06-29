@@ -11,10 +11,13 @@ interface BoardState {
   error: string | null
   previousUrl: string | null
   columns: Column[]
+  originalColumns: Column[] // Store original unfiltered columns
   tasks: Task[]
+  originalTasks: Task[] // Store original unfiltered tasks
   tasksByColumn: Record<string, Task[]>
   viewMode: 'board' | 'table'
   starredBoards: Board[]
+  isFiltered: boolean
   
   setBoards: (boards: Board[]) => void
   setStarredBoards: (boards: Board[]) => void
@@ -25,6 +28,9 @@ interface BoardState {
   clearError: () => void
   setColumns: (columns: Column[]) => void
   setTasks: (tasks: Task[]) => void
+  setOriginalData: (columns: Column[], tasks: Task[]) => void
+  applyFilter: (filteredColumns: Column[], filteredTasks: Task[]) => void
+  clearFilter: () => void
   addColumn: (column: Column) => void
   addTask: (task: Task) => void
   updateColumnOrder: (columns: Column[]) => void
@@ -59,10 +65,13 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   error: null,
   previousUrl: null,
   columns: [],
+  originalColumns: [],
   tasks: [],
+  originalTasks: [],
   tasksByColumn: {},
   viewMode: 'board',
   starredBoards: [],
+  isFiltered: false,
   
   setBoards: (boards) => set({ boards }),
   setStarredBoards: (boards) => set({ starredBoards: boards }),
@@ -78,6 +87,23 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   clearError: () => set({ error: null }),
   setColumns: (columns) => set({ columns }),
   setTasks: (tasks) => set({ tasks }),
+  setOriginalData: (columns, tasks) => set({ 
+    originalColumns: columns, 
+    originalTasks: tasks,
+    columns: columns,
+    tasks: tasks,
+    isFiltered: false 
+  }),
+  applyFilter: (filteredColumns, filteredTasks) => set({ 
+    columns: filteredColumns, 
+    tasks: filteredTasks, 
+    isFiltered: true 
+  }),
+  clearFilter: () => set((state) => ({ 
+    columns: state.originalColumns, 
+    tasks: state.originalTasks, 
+    isFiltered: false 
+  })),
   addColumn: (column) => set((state) => ({ 
     columns: [...state.columns, column] 
   })),

@@ -112,7 +112,7 @@ export const ColumnHeader = ({ data, isCollapsed, setIsCollapsed }: ColumnHeader
                         {!isCollapsed && (
                             <div 
                                 onClick={enableEditing}
-                                className="w-full text-md px-2.5 py-1 h-7 font-bold border-transparent cursor-pointer"
+                                className="w-full text-md px-2.5 py-1 h-auto font-semibold border-transparent cursor-pointer"
                             >
                                 {title}
                             </div>

@@ -20,7 +20,7 @@ export async function createTask(data: Task, userId?: string, teamspaceId?: stri
     }
   }
 
-  const { assignedTo, columnId, position, ...restData } = data;
+  const { assignedTo, columnId, position, content, ...restData } = data;
   const taskData: any = {
     ...restData,
     createdAt: new Date(),
@@ -59,9 +59,9 @@ export async function createTasks(tasks: Task[], userId?: string, teamspaceId?: 
       throw new Error('Due date cannot be in the past');
     }
 
-    const { columnId, position, ...restData } = data;
+    const { columnId, position, content, ...restData } = data;
 
-    // Remove assignedTo if it's null to satisfy Prisma's type requirements
+    // Remove assignedTo and content if present to satisfy Prisma's type requirements
     const { assignedTo, ...rest } = restData;
     const dataToCreate: any = {
       ...rest,
@@ -122,12 +122,21 @@ export async function getTasks(userId: string, boardId?: string) {
 }
 
 export async function updateTask(taskId: string, data: Partial<Task>) {
+  // Check if task exists in database first
+  const existingTask = await prisma.task.findUnique({
+    where: { id: taskId }
+  });
+  
+  if (!existingTask) {
+    throw new Error(`Task with id ${taskId} not found`);
+  }
+
   if (data.dueDate && data.dueDate < new Date()) {
     throw new Error('Due date cannot be in the past');
   }
-  const updateData: any = {
-    ...data,
-  };
+  
+  // Remove content field and other relation fields that shouldn't be updated directly
+  const { content, ...updateData } = data;
 
   const updatedTask = await prisma.task.update({
     where: { 
@@ -153,6 +162,16 @@ export async function updateTask(taskId: string, data: Partial<Task>) {
 export async function updateTasks(tasks: Task[]) {
   const updatedTasks = [];
   for (const task of tasks) {
+    // Check if task exists in database first
+    const existingTask = await prisma.task.findUnique({
+      where: { id: task.id }
+    });
+    
+    if (!existingTask) {
+      console.warn(`Task with id ${task.id} not found in database, skipping update`);
+      continue;
+    }
+
     if (task.dueDate && task.dueDate < new Date()) {
       throw new Error('Due date cannot be in the past');
     }
@@ -166,7 +185,7 @@ export async function updateTasks(tasks: Task[]) {
       }
     }
 
-    const { columnId, assignedTo, ...restData } = task;
+    const { columnId, assignedTo, content, ...restData } = task;
     const updateData: any = {
       ...restData,
       repeat: task.repeat || '',

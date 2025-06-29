@@ -52,6 +52,24 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
   const [isPersonalTask, setIsPersonalTask] = useState(Boolean(task.userId));
   const {currentOrgId} = useCurrentIds();
 
+  const handlePersonalTaskToggle = async () => {
+    try {
+      const newPersonalState = !isPersonalTask;
+      const updates = {
+        userId: newPersonalState ? user?.id || null : null,
+      };
+
+      // Update in database
+      await updateTaskDetails(task.id, updates);
+
+      // Update local state
+      updateTask(task.id, updates);
+      setIsPersonalTask(newPersonalState);
+    } catch (error) {
+      console.error('Failed to update personal task status:', error);
+    }
+  };
+
   useEffect(() => {
     if (isOpen && task.id) {
       setIsLoadingLogs(true);
@@ -201,7 +219,7 @@ export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                               <Button 
                                   variant={isPersonalTask ? "secondary" : "outline"} 
                                   className="justify-start flex-1"
-                                  onClick={()=>{setIsPersonalTask(!isPersonalTask)}}
+                                  onClick={handlePersonalTaskToggle}
                               >
                                   {isPersonalTask ? (
                                       <>
