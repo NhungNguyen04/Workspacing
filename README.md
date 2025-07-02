@@ -56,10 +56,10 @@ If you're interested, please refer to this link to know the backstory of this pr
 ---
 
 ## Roadmap & Future Enhancements
-✔ AI-powered **task suggestions & smart notifications**  
-✔ **Granular permissions & role-based access control**  
-✔ **Mobile-friendly UI & PWA support**  
-✔ **Calendar & external app integrations**  
+- AI-powered **task suggestions & smart notifications**
+- **Granular permissions & role-based access control**  
+- **Mobile-friendly UI & PWA support**  
+- **Calendar & external app integrations**  
 
 ---
 
