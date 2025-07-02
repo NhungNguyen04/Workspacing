@@ -6,41 +6,43 @@
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
 ![Zustand](https://img.shields.io/badge/Zustand-7857FF?style=for-the-badge&logo=zustand&logoColor=white)
 
-🚀 **Live Demo:** [WorkSpacing](https://workspacing.vercel.app)
+ **Live Demo:** [WorkSpacing](https://workspacing.vercel.app)
 
-![WorkSpacing Preview](./public/screenshot.png)
+![WorkSpacing Preview](https://res.cloudinary.com/dqidbi0lh/image/upload/v1751471458/portfolio/mgto2p183d71uuiqjrlk.jpg)
 
 ---
 
-## ✨ WorkSpacing – Your All-in-One Productivity Hub
+## WorkSpacing – Your All-in-One Productivity Hub
 
 WorkSpacing is a powerful web-based **task & content management** platform for individuals and teams. With an intuitive interface and **AI-powered task generation**, WorkSpacing helps you stay organized and collaborate seamlessly.
+If you're interested, please refer to this link to know the backstory of this project [Workspacing blog post](https://nhung-portfolio.vercel.app/blog/workspacing-from-ideas-to-actual-product-1751472101998)
 
 ---
 
-## 🔥 Key Features
+##  Key Features
 
-### 🏠 Personal Workspace
-- **✅ Task Management**: Add, edit, delete tasks with status tracking (In Progress / Done / Cancel).  
-- **📂 Content Management**: Organize notes, documents, and other content.  
-- **📊 Visual Task Overview**: Status bar for tracking daily tasks.  
-- **🗂️ Category Filtering**: Group content into categories for easy access.  
+###  Personal Workspace
+- **Task Management**: Add, edit, delete tasks with status tracking (In Progress / Done / Cancel).  
+- **Content Management**: Organize notes, documents, and other content.  
+- **Visual Task Overview**: Status bar for tracking daily tasks.  
+- **Category Filtering**: Group content into categories for easy access.  
 
-### 👥 Teamspaces (Collaboration)
-- **🗂 Kanban Boards**: Create & manage boards, add columns & tasks.  
-- **⚡ AI Task Generation**: Automatically generate tasks & columns with AI.  
-- **📅 Due Dates & Personal Task Sync**: Link team tasks to personal workspace.  
-- **📝 Activity Logs**: Track changes to tasks in real time.  
-- **📂 Shared Content**: Manage team documents just like personal content.  
+### Teamspaces (Collaboration)
+- **Kanban Boards**: Create & manage boards, add columns & tasks.  
+- **AI Task Generation**: Automatically generate tasks & columns with AI.
+- **Manage tasks**: Update task related information, embed teamspace content, assign to a member
+- **Due Dates & Personal Task Sync**: Link team tasks to personal workspace. 
+- **Activity Logs**: Track changes to tasks in real time.  
+- **Shared Content**: Manage team documents just like personal content.  
 
-### 🔒 Security & Access Control
-- **🔑 Google Authentication** with Clerk  
-- **🛡️ Role-based Permissions (Coming Soon!)**  
-- **🌍 Data Privacy & Secure Workspaces**  
+### Security & Access Control
+- **Google Authentication** with Clerk  
+- **Role-based Permissions (Coming Soon!)**  
+- **Data Privacy & Secure Workspaces**  
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 1. **Sign Up / Log In**  
    Create an account using **Google authentication**.  
@@ -53,7 +55,7 @@ WorkSpacing is a powerful web-based **task & content management** platform for i
 
 ---
 
-## 🌱 Roadmap & Future Enhancements
+## Roadmap & Future Enhancements
 ✔ AI-powered **task suggestions & smart notifications**  
 ✔ **Granular permissions & role-based access control**  
 ✔ **Mobile-friendly UI & PWA support**  
@@ -61,11 +63,11 @@ WorkSpacing is a powerful web-based **task & content management** platform for i
 
 ---
 
-## 🤝 Support & Feedback
+## Support & Feedback
 Have questions or suggestions? Let’s connect!  
-📧 Email: [nguyennhungforwork04@gmail.com](mailto:nguyennhungforwork04@gmail.com)  
+Email: [nguyennhungforwork04@gmail.com](mailto:nguyennhungforwork04@gmail.com)  
 
 ---
 
-### ⚡ Try WorkSpacing Now!  
-👉 [Live Demo](https://workspacing.vercel.app)  
+### Try WorkSpacing Now!  
+ [Live Demo](https://workspacing.vercel.app)  
